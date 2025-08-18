@@ -47,11 +47,11 @@ mags = imu.Mags
 magBias = imu.MagBias
 
 # Save Calibration Data to File
-imu.saveCalibDataToFile(os.path.join(BASE_DIR, "/calib.json"))
+imu.saveCalibDataToFile(os.path.join(BASE_DIR, "calib.json"))
 print('calib data saved')
 
 # Load Calibration Data from File
-imu.loadCalibDataFromFile(os.path.join(BASE_DIR, "/calib.json"))
+imu.loadCalibDataFromFile(os.path.join(BASE_DIR, "calib.json"))
 
 # Verify Loaded Calibration Data
 if np.array_equal(accelscale, imu.Accels) & np.array_equal(accelBias, imu.AccelBias) & \
