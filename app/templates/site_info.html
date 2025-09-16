@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preload" href="{{ url_for('static', filename='font/BebasNeue-Regular.ttf') }}" as="font" type="font/ttf" crossorigin="anonymous">
+    <title>Site Information</title>
+    <style>
+        
+        @font-face {
+            font-family: 'Bebas Neue';
+            src: url('{{ url_for("static", filename="font/BebasNeue-Regular.ttf") }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            font-family: 'Bebas Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh; /* Full viewport height */
+            margin: 0;
+            margin-top: -20;
+            padding: 0;
+            background-color: #f0f0f0;
+            background-image: url("{{ url_for('static', filename='images/app_bg.jpg') }}");
+            background-size: cover;
+            background-attachment: fixed;
+        }
+
+
+        h1 {
+            font-size: 40px;
+            text-align: center;
+        }
+        .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo {
+            width: 80%;
+            max-width: 300px;
+            height: auto;
+            margin-bottom: -20px;
+            /*margin-left: 20px;*/
+        }
+        .banner {
+            background-color: #ffcc00;
+            color: #333;
+            text-align: center;
+            width: 100%;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 1.2em;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+        }
+        .spacer { 
+            height: 60px; /* Match the height of the banner */ 
+            width: 100%; 
+        }
+        /* Main container should take full height */
+        .container {
+            display: flex;
+            flex-direction: column;
+            /*flex: 1;*/
+            /* overflow-y: auto; */ /* Allow scrolling */
+        }
+        .config-container {
+            padding: 10px;
+            background-color: #ccc;
+            flex-direction: column;
+            align-items: center;
+            display: flex;
+            justify-content: center;
+            /*flex: 1; */ /* commenting this out got rid of config container extending to bottom of screen */
+            /*overflow-y: auto; /* Scrollable form container */
+        }
+
+        .config-item {
+            margin-bottom: 10px;
+        }
+
+        .config-item label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        /* Input and Select Styling */
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0 10px 0;
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+            font-size: 16px;
+            background-color: #f9f9f9;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0 10px 0;
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+            font-size: 16px;
+            background-color: #f9f9f9;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .info-text {
+            font-size: 14px;
+            font-style: italic;
+            color: #000; 
+            margin-top: 0px; /* Add space between the input box and the text */
+        }
+
+        /* Button Styling */
+        .button-container {
+            display: flex;
+            /*flex-direction: column;*/
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            width: 80%;
+            max-width: 300px;
+        }
+
+        button {
+            background-color: #000;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Bebas Neue';
+            font-size: 20px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #4571a0;
+        }
+        .highlighted-title {
+            display: inline-block; /* Ensures the background only covers the text */
+            background-color: white; /* Rectangle color */
+            color: black; /* Text color */
+            padding: 10px 20px; /* Padding to create space around the text */
+            border-radius: 5px; /* Optional: Rounds the corners */
+            font-family: 'Bebas Neue', sans-serif; /* Font styling */
+            font-size: 30px; /* Adjust font size as needed */
+            text-align: center; /* Center text if it spans multiple lines */
+        }
+       /* Responsive Design */
+       @media (min-width: 600px) {
+            .button-container {
+                flex-direction: row;
+                justify-content: space-between;
+                max-width: 600px; /* Wider container on larger screens */
+            }
+            button {
+                width: 48%; /* Two buttons per row */
+                margin: 10px 1%;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .logo img {
+                margin-top: 20px; /* Add top margin for the logo in mobile view */
+            }
+        }
+
+        @media (min-width: 900px) {
+            body {
+                max-width: 3000px; 
+            }
+            .button-container {
+                max-width: 500px; 
+            }
+            button {
+                font-size: 20px; /* Reduce font size for larger screens */
+                width: 60%; /* Adjust button size for larger screens */
+               
+            }
+        }
+    </style>
+</head>
+<body>
+    {% if g.process_running %}
+        <div class="banner">PIV Process is running</div>
+    {% endif %}
+    <div class="spacer"></div>
+    <div class="logo-container">
+        <img src="{{ url_for('static', filename='images/SPEC_logo.png') }}" class="logo" alt="Logo" style="width: 100%; height: auto; border-radius: 10px; margin-top: 20px; margin-bottom: 5px">
+    </div>
+    <div class="container">
+
+        <h2 class="highlighted-title">Site Information</h2>
+
+        <div class="config-container">
+            <form id="configForm">
+                <div class="config-item">
+                    <label for="site_name">Site Name</label>
+                    <input type="text" id="site_name" name="site_name" value="{{ site_name }}">
+                </div>
+                <div class="config-item">
+                    <label for="site_id">Site ID</label>
+                    <input type="text" id="site_id" name="site_id" value="{{ site_id }}">
+                </div>
+                <div class="config-item">
+                    <label for="site_Operator">Site Operator</label>
+                    <input type="text" id="site_operator" name="site_operator" value="{{ site_operator }}" >
+                </div>
+              <!--<div class="config-item">
+                    <label for="site_piv_break">Time between PIV Runs (min)</label>
+                    <input type="text" id="site_piv_break" name="site_piv_break" value="{{ site_piv_break }}" >
+                </div>-->
+                <div class="config-item">
+                    <label for="site_comments">Site Comments</label>
+                    <textarea id="site_comments" name="site_comments" rows = "4">{{ site_comments }} </textarea>
+                </div>
+
+                
+                <div class=button-container>
+                    <button type="submit">Update</button>
+                    <button onclick="history.back()">Back</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        document.getElementById('configForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+    
+            const formData = new FormData(event.target);
+            const data = {};
+    
+            // Read all form data
+            formData.forEach((value, key) => {
+                data[key] = value;
+            });
+
+            // Send the data to the server via a POST request
+            fetch('/save_config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.message) {
+                    alert('Configuration saved successfully!');
+                } else if (result.error) {
+                    alert('Error: ' + result.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</body>
+</html>

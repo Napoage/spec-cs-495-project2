@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preload" href="{{ url_for('static', filename='font/BebasNeue-Regular.ttf') }}" as="font" type="font/ttf" crossorigin="anonymous">
+    <title>Select and Delete</title>
+    <style>
+        @font-face {
+            font-family: 'Bebas Neue';
+            src: url('{{ url_for("static", filename="font/BebasNeue-Regular.ttf") }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            font-family: 'Bebas Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh; 
+            margin: 0;
+            margin-top: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            background-image: url("{{ url_for('static', filename='images/app_bg.jpg') }}");
+            background-size: cover;
+            background-attachment: fixed;
+        }
+                /* Banner Style */
+        .banner {
+            background-color: #ffcc00;
+            color: #333;
+            text-align: center;
+            width: 100%;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 1.2em;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+        }
+        .spacer {
+            height: 60px; /* Match the height of the banner */
+            width: 100%;
+        }
+        .content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            padding-top: 20px;
+            box-sizing: border-box;
+        }
+
+        .logo {
+            width: 80%;
+            max-width: 300px;
+            height: auto;
+            margin-bottom: 20px;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            /*width: 80%;*/
+            max-width: 300px;
+            margin-bottom: 0px;
+        }
+        button {
+            background-color: #000;
+            color: white;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 30px;
+            font-family: 'Bebas Neue', sans-serif;
+            text-align: center;
+            transition: background-color 0.3s;
+            
+        }
+        button:hover {
+            background-color: #4571a0;
+        }
+        form.centered-form {
+            display: flex;
+            flex-direction: column; /* Stack items vertically */
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto; /* Center horizontally */
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9); /* Slightly transparent background */
+            border-radius: 10px;
+            max-width: 600px; /* Set a max width */
+            width: 90%; /* Responsive width */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add some shadow for emphasis */
+        }
+
+        form.centered-form button {
+            width: 100%; /* Buttons take full form width */
+            margin: 10px 0; /* Add spacing between form elements */
+        }
+
+        form.centered-form select {
+            width: 100%; /* Make the dropdown occupy full width */
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-family: Arial, sans-serif;
+        }
+        .highlighted-title {
+            display: block; /* Ensures the background only covers the text inline-block*/
+            background-color: white; /* Rectangle color */
+            color: black; /* Text color */
+            padding: 10px 20px; /* Padding to create space around the text */
+            border-radius: 5px; /* Optional: Rounds the corners */
+            font-family: 'Bebas Neue', sans-serif; /* Font styling */
+            font-size: 30px; /* Adjust font size as needed */
+            text-align: center; /* Center text if it spans multiple lines */
+            width: 40%;
+        }
+        .highlighted-table {
+            display: inline-block; /* Ensures the background only covers the text */
+            background-color: white; /* Rectangle color */
+            color: black; /* Text color */
+            /*padding: 10px 20px; /* Padding to create space around the text */
+            border-radius: 5px; /* Optional: Rounds the corners */
+            font-family: 'Bebas Neue', sans-serif; /* Font styling */
+            font-size: 20px; /* Adjust font size as needed */
+            text-align: center; /* Center text if it spans multiple lines */
+            margin-bottom: 10px;
+            width: 65%;
+        }
+                /* Remove bullets from the list */
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        
+        /* Style list items to align radio buttons and labels */
+        li {
+            margin-bottom: 10px;
+            text-align: left;
+        }
+        /* Responsive Design */
+        @media (min-width: 600px) {
+            .button-container {
+                flex-direction: row;
+                justify-content: space-between;
+                max-width: 600px; /* Wider container on larger screens */
+            }
+            button {
+                width: 48%; /* Two buttons per row */
+                margin: 10px 1%;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .logo img {
+                margin-top: 0px; /* Add top margin for the logo in mobile view */
+            }
+            .highlighted-title{
+                width: 80%;
+            }
+        }
+
+        @media (min-width: 900px) {
+            body {
+                max-width: 2000px; /* Limit width of content on larger screens */
+            }
+
+
+            .button-container {
+                flex-direction: row; /* Arrange buttons in rows */
+                flex-wrap: wrap; /* Allow wrapping to the next line if needed */
+                justify-content: center; /* Distribute space evenly */
+                max-width: 100%; /* Allow wider container for buttons */
+            }
+            button {
+                font-size: 20px; /* Adjust font size for larger screens */
+                flex: 1 1 30%; /* Buttons take 30% of the container's width */
+                margin: 10px; /* Add margin between buttons */
+                max-width: 200px; /* Optional: limit maximum button width */
+            }
+        }
+    </style>
+</head>
+<body>
+    {% if g.process_running %}
+        <div class="banner">PIV Process is running</div>
+    {% endif %}
+    <div class="spacer"></div>
+    <div class="logo">
+        <img src="{{ url_for('static', filename='images/SPEC_logo.png') }}" alt="Logo" style="width: 120%; height: auto; border-radius: 10px; ">
+    </div>
+    <h2 class="highlighted-title">Delete Folders</h2>
+    <div class="content">
+
+        <div class="button-container">
+            <form id="delete-folder-form" class="centered-form" method="POST" action="/delete-folder">
+                <div class="highlighted-table">
+                    <ul>
+                        <!-- Dynamically populate folder list -->
+                        {% for folder in folders %}
+                        <li>
+                            <input type="checkbox" name="folders[]" value="{{ folder }}" id="folder-{{ loop.index }}">
+                            <label for="folder-{{ loop.index }}">{{ folder }}</label>
+                        </li>
+                        {% endfor %}
+                        <li>
+                            <input type="checkbox" id="select-all" onclick="toggleSelectAll(this)">
+                            <label for="select-all">Select All</label>
+                        </li>
+                    </ul>
+                </div>
+                <button type="submit">Delete Selected Folder(s)</button>
+            </div>    
+            </form>
+            <div class="button-container">
+                <button onclick="history.go(-2)">Back</button>
+                <button onclick="location.href='/splash'">Main Menu</button>
+            </div>
+
+
+
+        <div class="logo">
+            <img src="{{ url_for('static', filename='images/DA_logo.jpg') }}" alt="Logo" style="width: 40%; height: auto;">
+        </div>
+    </div>
+    <script>
+        // JavaScript to handle "Select All" functionality
+        function toggleSelectAll(source) {
+            const checkboxes = document.querySelectorAll('input[name="folders[]"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = source.checked;
+            });
+        }
+    </script>
+</body>
+</html>
+

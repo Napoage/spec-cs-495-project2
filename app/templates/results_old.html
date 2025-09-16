@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results</title>
+
+    <!-- Bootstrap for responsive layout and styling -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    
+    <style>
+
+        body {
+            font-family: 'Bebas Neue';
+            src: url('font/BebasNeue-Regular.ttf') format('ttf');
+        }
+        #velocity-graph {
+            max-width: 100%;
+            height: auto;
+            border: 2px solid black;
+        }
+
+        .button-group {
+            margin: 20px 0;
+        }
+
+        .button-group button {
+            margin: 5px;
+            padding: 10px;
+            font-size: 18px;
+            background-color: #000;
+            color: white;
+            
+        }
+
+        @media (max-width: 768px) {
+            .button-group button {
+                font-size: 14px;
+                padding: 8px;
+            }
+        }
+
+        h1, h2 {
+            margin-top: 20px;
+        }
+
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            width: 80%;
+            max-width: 300px;
+        }
+        @font-face {
+            font-family: 'Bebas Neue';
+            src: url('static/font/BebasNeue-Regular.ttf') format('ttf');
+            font-weight: normal;
+            font-style: normal;
+        }
+        button {
+            background-color: #000;
+            color: white;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 30px;
+            font-family: 'Bebas Neue', sans-serif;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        /* Responsive Design */
+        @media (min-width: 600px) {
+            .button-container {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+            button {
+                width: 30%;
+                margin: 10px 5px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Results</h1>
+
+        <!-- Display the graph -->
+        <div class="text-center">
+            <h2>Velocity Magnitude Graph</h2>
+            <img id="velocity-graph" src="/results/graph/mps/image" alt="Velocity Graph">
+        </div>
+
+        <!-- Toggle between m/s and ft/s for the graph -->
+        <div class="text-center button-group">
+            <h2>Meters per second (m/s)</h2>
+            <button class="btn btn-primary" onclick="displayGraph('mps', 'image')">Vectors Over Image</button>
+            <button class="btn btn-secondary" onclick="displayGraph('mps', 'magnitude')">Vectors Over Magnitude</button>
+        </div>
+        <!-- Toggle between m/s and ft/s for the graph -->
+        <div class="text-center button-group">
+            <h2>Feet per second (ft/s)</h2>
+            <button class="btn btn-primary" onclick="displayGraph('fps', 'image')">Vectors Over Image</button>
+            <button class="btn btn-secondary" onclick="displayGraph('fps', 'magnitude')">Vectors Over Magnitude</button>
+        </div>
+        <!-- Buttons to view CSV data -->
+        <div class="text-center button-group">
+            <h2>View CSV Data</h2>
+            <button class="btn btn-primary" onclick="viewCSV('xPiv')">View xPiv</button>
+            <button class="btn btn-secondary" onclick="viewCSV('yPiv')">View yPiv</button>
+            <button class="btn btn-secondary" onclick="viewCSV('uScale')">View uScale</button>
+            <button class="btn btn-secondary" onclick="viewCSV('vScale')">View vScale</button>
+            <button class="btn btn-secondary" onclick="viewCSV('magScale')">View magScale (m/s)</button>
+            <button class="btn btn-secondary" onclick="viewCSV('magScale', 'fps')">View magScale (ft/s)</button>
+        </div>
+
+        <div class="text-center button-group">
+            <button onclick="location.href='/splash'">Menu</button>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies for button interactivity -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        function viewCSV(name, unit = 'mps') {
+            window.location.href = `/results/view_csv/${name}/${unit}`;
+        }
+
+        function displayGraph(unit, displayType) {
+            const imgElement = document.getElementById("velocity-graph");
+            imgElement.src = `/results/graph/${unit}/${displayType}`;  // Update the image source based on selection
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main Menu Instructions</title>
+    <style>
+        @font-face {
+            font-family: 'Bebas Neue';
+            src: url('{{ url_for("static", filename="font/BebasNeue-Regular.ttf") }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            font-family: 'Bebas Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh; 
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            background-image: url("{{ url_for('static', filename='images/app_bg.jpg') }}");
+            background-size: cover;
+            background-attachment: fixed;
+        }
+        .content-box {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            max-width: 800px;
+            width: 90%;
+            margin: 20px;
+            padding: 20px;
+            text-align: left;
+        }
+        h1, h2 {
+            color: #333;
+            text-align: center;
+        }
+        p {
+            font-size: 16px;
+            margin: 10px 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        ul {
+            font-size: 16px;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        .image-placeholder {
+            width: 100%;
+            height: 200px;
+            background-color: #ddd;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            color: #666;
+            border: 2px dashed #bbb;
+        }
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #000;
+            color: white;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.2em;
+            font-family: 'Bebas Neue', sans-serif;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #4571a0;
+        }
+    </style>
+</head>
+<body>
+    <div class="content-box">
+        <h1>Main Menu Instructions</h1>
+        <p>
+            On this page, you will have three main options to navigate elsewhere and a LOGOUT button for secure exit. 
+            Below are the available options and their corresponding functions:
+        </p>
+        
+        <h2>Utilities</h2>
+        <p>
+            This section provides essential tools for managing the device and system operations:
+        </p>
+        <ul>
+            <li><strong>SITE INFO</strong>: View or update site-specific information.</li>
+            <li><strong>LIVE VIDEO</strong>: Access a live feed from the device camera.</li>
+            <li><strong>SAVE DATA</strong>: Save collected data for further analysis.</li>
+            <li><strong>VIEW LOGS</strong>: Review system logs for diagnostics or troubleshooting.</li>
+            <li><strong>CHECK DISK SPACE</strong>: Check remaining disk space and time till it runs out. .</li>
+            <li><strong>REBOOT SYSTEM</strong>: Restart the system if needed.</li>
+        </ul>
+        
+        <h2>Setup and Calibrations</h2>
+        <p>
+            Use this section to configure and prepare the system for PIV operations:
+        </p>
+        <ul>
+            <li><strong>TRAPEZOID CALIBRATION</strong>: Define the area of interest for PIV analysis.</li>
+            <li><strong>PIV PARAMETERS</strong>: Set key parameters for PIV calculations.</li>
+            <li><strong>MASKING OPTION</strong>: Exclude non-relevant areas from the PIV analysis to improve accuracy.</li>
+            <li><strong>CAMERA PARAMETERS</strong>: Adjust camera based parameters, should only be set once.</li>
+        </ul>
+        
+        <h2>PIV Functions</h2>
+        <p>
+            This section contains tools to perform PIV analysis and review results:
+        </p>
+        <ul>
+            <li><strong>RUN TEST</strong>: Perform a test run to verify the system’s calibration and settings.</li>
+            <li><strong>RUN PIV</strong>: Execute the PIV calculations continuously.</li>
+            <li><strong>RESULTS</strong>: View the results of the PIV analysis.</li>
+        </ul>
+        
+        <h2>Logout</h2>
+        <p>
+            Use the <strong>LOGOUT</strong> button to securely exit the application when your session is complete.
+        </p>
+
+        <div class="button-container">
+            <button onclick="location.href='/splash'">Back</button>
+        </div>
+    </div>
+</body>
+</html>

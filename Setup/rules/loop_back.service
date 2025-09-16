@@ -1,0 +1,14 @@
+[Unit]
+Description=Load and start loopback and gstreamer service
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/sbin/modprobe v4l2loopback devices=2 video_nr=2,3 exclusive_caps=1
+StandardOutput=append:/var/log/loopback.log
+StandardError=append:/var/log/loopback.log
+User=root
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preload" href="{{ url_for('static', filename='font/BebasNeue-Regular.ttf') }}" as="font" type="font/ttf" crossorigin="anonymous">
+    <title>Save and Run PIV</title>
+    <style>
+        @font-face {
+            font-family: 'Bebas Neue';
+            src: url('{{ url_for("static", filename="font/BebasNeue-Regular.ttf") }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            font-family: 'Bebas Neue', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh; /* Full viewport height */
+            margin: 0;
+            margin-top: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            background-image: url("{{ url_for('static', filename='images/app_bg.jpg') }}");
+            background-size: cover;
+            background-attachment: fixed;
+        }
+        .logo {
+            width: 80%;
+            max-width: 300px;
+            height: auto;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        button {
+            background-color: #000;
+            color: white;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 20px;
+            font-family: 'Bebas Neue', sans-serif;
+            text-align: center;
+            transition: background-color 0.3s;
+            width: 100%;
+        }
+
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 60%;
+            max-width: 600px;
+            margin: 0 auto;
+            gap: 10px; /* Space between buttons */
+        }
+        .buttons-wrapper {
+            display: flex;
+            gap: 1rem; /* space between the two buttons */
+            align-items: center; /* vertically center them (optional) */
+            width: 80%;
+            max-width: 600px;
+        }
+        .button-container form {
+            margin: 0;
+            padding: 0;
+        }
+        .button-container button{
+            width: 100%;       /* make the button fill the full container width */
+            padding: 12px;     /* consistent padding */
+            font-size: 16px;
+            cursor: pointer;
+            box-sizing: border-box; /* avoid overflow from padding */
+        }
+        .info-box {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            font-size: 16px;
+            color: #333;
+            margin-top: 10px;
+        }
+        .spacer { height: 60px; /* Match the height of the banner */ width: 100%; }
+        .highlighted-title {
+            /*display: inline-block; /* Ensures the background only covers the text */
+            display: block;
+            width: 50%;
+            background-color: white; /* Rectangle color */
+            color: black; /* Text color */
+            padding: 10px 20px; /* Padding to create space around the text */
+            border-radius: 5px; /* Optional: Rounds the corners */
+            font-family: 'Bebas Neue', sans-serif; /* Font styling */
+            font-size: 24px; /* Adjust font size as needed */
+            text-align: center; /* Center text if it spans multiple lines */
+        }
+        .highlighted-subtitle {
+            display: inline-block; /* Ensures the background only covers the text */
+            background-color: white; /* Rectangle color */
+            color: black; /* Text color */
+            padding: 10px 20px; /* Padding to create space around the text */
+            border-radius: 5px; /* Optional: Rounds the corners */
+            /*font-family: 'Bebas Neue', sans-serif; /* Font styling */
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px; /* Adjust font size as needed */
+            text-align: center; /* Center text if it spans multiple lines */
+            
+        }
+        .duration-display {
+            /*display: inline-block; /* Ensures the background only covers the text */
+            display: none; /* Invisible until there is data to display */
+            background-color: white; /* Rectangle color */
+            color: black; /* Text color */
+            padding: 10px 20px; /* Padding to create space around the text */
+            border-radius: 5px; /* Optional: Rounds the corners */
+            /*font-family: 'Bebas Neue', sans-serif; /* Font styling */
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px; /* Adjust font size as needed */
+            text-align: center; /* Center text if it spans multiple lines */
+        }
+        /* Responsive Design */
+        @media (min-width: 600px) {
+            .keep-delete-container {
+                flex-direction: row; /* Display buttons side by side on larger screens */
+            }
+        }
+        @media (min-width: 600px) {
+            .button-container {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: stretch;
+            }
+            button {
+                width: 48%; /* Two buttons per row */
+                margin: 10px 1%;
+            }
+            .button-container form,
+            .button-container > button {
+                width: 48%;        /* each “column” is 48% wide */
+                margin: 10px 1%;   /* side margin for spacing */
+                box-sizing: border-box;
+            }
+              /* Prevent text wrapping & normalize line-height */
+            .button-container button {
+                white-space: nowrap;
+                line-height: 1.2; /* Adjust as desired */
+            }
+
+    /* Now make the actual button in the form fill its parent (the form) */
+            .button-container form button {
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .logo img {
+                margin-top: 0px; /* Add top margin for the logo in mobile view */
+            }
+        }
+
+        @media (min-width: 900px) {
+            body {
+                max-width: 2000px; /* Limit width of content on larger screens */
+            }
+            .button-container {
+                max-width: 500px; 
+            }
+            button {
+                font-size: 20px; /* Reduce font size for larger screens */
+                width: 50%; /* Adjust button size for larger screens */
+               
+            }
+        }    
+    </style>
+</head>
+<body>
+    {% if g.process_running %}
+        <div class="banner">PIV Process is running</div>
+    {% endif %}
+    <div class="spacer"></div>
+    <div class="logo">
+        <img src="{{ url_for('static', filename='images/SPEC_logo.png') }}" alt="Logo" style="width: 120%; height: auto; border-radius: 10px;">
+    </div>
+    <h2 class="highlighted-subtitle">Do you want to save or delete your test files before starting the PIV process?</h2>
+
+    <div class="button-container">
+        
+        <button onclick="location.href='/save_data_piv'">Save and Delete Test Files</button>
+        <form method="POST" action="{{ url_for('run_process') }}">
+            <button type="submit">Run PIV</button>
+        </form>
+        <button onclick="location.href='/splash'">Main Menu</button>
+    </div>
+    <!-- Disk Space Display Box (Always Visible) -->
+    <div id="disk-space-box" class="info-box">
+        Free Disk Space: <span id="disk-space">{{ total_space_gb }} GB</span><br>
+        Space Run Out Date: <span id="days-till-run-out">{{ days_left }}</span>
+    </div>
+    <script>
+        function runPIV() {
+            fetch('{{ url_for("run_process") }}', {
+                method: 'POST' // Sends a POST request to the /run_process route
+            })
+            .then(response => response.json()) // Assuming the server returns a JSON response
+            .then(data => {
+                alert(data.message); // Show success or error message from the server response
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while running PIV.');
+            });
+        }
+    </script>
+</body>
+</html>
+
+
+
+

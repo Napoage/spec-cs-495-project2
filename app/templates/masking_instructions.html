@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Masking </title>
+    <style>
+        @font-face {
+            font-family: 'Bebas Neue';
+            src: url('{{ url_for("static", filename="font/BebasNeue-Regular.ttf") }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            font-family: 'Bebas Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh; 
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            background-image: url("{{ url_for('static', filename='images/app_bg.jpg') }}");
+            background-size: cover;
+            background-attachment: fixed;
+        }
+        p {
+            font-size: 16px;
+            margin: 10px 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        ul {
+            font-size: 16px;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .banner {
+            background-color: #ffcc00;
+            color: #333;
+            text-align: center;
+            width: 100%;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 1.2em;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+        }
+        .spacer {
+            height: 60px;
+            width: 100%;
+        }
+
+        .text-box {
+            background-color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            width: 90%;
+            max-width: 800px;
+            margin: 20px auto;
+            text-align: left;
+            line-height: 1.5;
+            color: #333;
+        }
+        .text-box h1, .text-box h2 {
+            text-align: center;
+        }
+        .text-box img { 
+            max-width: 100%; 
+            height: auto; 
+            margin: 20px auto; /* This centers the image horizontally */ 
+            display: block; /* Ensures the image occupies its own line */ 
+        }
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            width: 90%;
+            max-width: 800px;
+        }
+        button {
+            background-color: #000;
+            color: white;
+            padding: 15px 30px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            font-family: 'Bebas Neue', sans-serif;
+            text-align: center;
+            transition: background-color 0.3s;
+            flex: 1;
+        }
+        button:hover {
+            background-color: #4571a0;
+        }
+        button + button {
+            margin-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    {% if g.process_running %}
+        <div class="banner">PIV Process is running</div>
+    {% endif %}
+    <div class="spacer"></div>
+    <div class="text-box">
+        <h1>Masking Options Calibration</h1>
+        <p>
+            This next step in the calibration process is masking. Masking allows us to exclude parts of the transformed image that are not the water,
+            so that the PIV does not run on stationary areas. This can speed up the calculations depending on how much is masked out. 
+        </p>
+        <p>
+            you want to mask out everything except the river and include as much of the river as possible to maximize the area with PIV output. 
+        </p>
+        <h2>Masking Methods</h2>
+        <p>
+            The first page you will come to when you hit next is a page that asks if you want to 
+            <strong>DIGITIZE</strong> or <strong>GENERATE</strong> a mask.
+        </p>
+        <img src="{{ url_for('static', filename='images/masking_splash.jpg') }}" alt="Masking Splash Page">
+        <h3>Digitize Mask</h3>
+        <p>
+            This is a user-selected custom mask. You will be shown a transformed image and just need to click around 
+            the area you want to include in your mask. Start from the top right of the polygon you wish to create and proceed counterclockwise.
+            This will show green dots where you click, and once finished, 
+            you click <strong>SUBMIT POINTS</strong>. This will perform the masking process in the backend and 
+            show you three images: the original transformed image, the binary mask, and the final masked image. 
+            If you like the mask, hit <strong>SAVE MASK PATH</strong>. The mask will be saved and then used in all 
+            following PIV calculations until a new mask is saved.
+        </p>
+        <img src="{{ url_for('static', filename='images/digitize_mask_example.jpg') }}" alt="Digitize Mask Example">
+        <h3>Generate Mask</h3>
+        <p>
+            This is an automatic masking process. It creates a mask based on the largest contoured area. 
+            If your river is distinctly a different contour than its surroundings, then this is a good option. 
+            Once done finding the largest contoured area, it will display three images: the original transformed image, 
+            the binary mask, and the final mask. If you like the mask, hit <strong>SAVE MASK PATH</strong>. 
+            The mask will be saved and then used in all following PIV calculations until a new mask is saved.
+        </p>
+        <!-- <div class="image-placeholder">DISPLAY IMAGE</div> -->
+        <p>
+            Click <strong>RUN TEST</strong> to run a test with the system you just calibrated!
+        </p>
+    </div>
+ <!--    <div class="button-container">
+        <button onclick="location.href='/setup_calibration_instructions'">Back</button>
+    </div> -->
+    <div class="button-container">
+        <button onclick="history.back()">Back</button>
+    </div>
+</body>
+</html>

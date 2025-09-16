@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preload" href="{{ url_for('static', filename='font/BebasNeue-Regular.ttf') }}" as="font" type="font/ttf" crossorigin="anonymous">
+    <title>Save Successful</title>
+    <style>
+        @font-face {
+            font-family: 'Bebas Neue';
+            src: url('{{ url_for("static", filename="font/BebasNeue-Regular.ttf") }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            font-family: 'Bebas Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* justify-content: flex-start; */
+            justify-content: center; /* Center the content vertically */
+            height: 100vh; /* Full viewport height */
+            margin: 0;
+
+            padding: 0;
+            background-color: #f0f0f0;
+            background-image: url("{{ url_for('static', filename='images/app_bg.jpg') }}");
+            background-size: cover;
+            background-attachment: fixed;
+        }
+        .banner {
+            background-color: #ffcc00;
+            color: #333;
+            text-align: center;
+            width: 100%;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 1.2em;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+        }
+        .logo {
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center contents horizontally */
+            justify-content: center; /* Center contents vertically */
+            width: 100%; /* Full width */
+        }
+
+        .login-container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 400px;
+            margin: 0 auto; /*Centers it*/
+        }
+        .login-container h2 {
+            margin-top: 0;
+            text-align: center;
+        }
+        .login-container label {
+            display: block;
+            margin-bottom: 8px;
+        }
+        .login-container input[type="text"], 
+        .login-container input[type="password"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .login-container input[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            background-color: #000000;
+            border: none;
+            color: #ffffff;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .login-container input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+        .error-message {
+            color: red;
+            margin-bottom: 10px;
+        }
+        .highlighted-title {
+            display: inline-block; /* Ensures the background only covers the text */
+            background-color: white; /* Rectangle color */
+            color: black; /* Text color */
+            padding: 10px 20px; /* Padding to create space around the text */
+            border-radius: 5px; /* Optional: Rounds the corners */
+            font-family: 'Bebas Neue', sans-serif; /* Font styling */
+            font-size: 30px; /* Adjust font size as needed */
+            text-align: center; /* Center text if it spans multiple lines */
+        }
+        .highlighted-subtitle {
+            display: inline-block; /* Ensures the background only covers the text */
+            background-color: white; /* Rectangle color */
+            color: black; /* Text color */
+            padding: 10px 20px; /* Padding to create space around the text */
+            border-radius: 5px; /* Optional: Rounds the corners */
+            font-family: 'Bebas Neue', sans-serif; /* Font styling */
+            font-size: 14px; /* Adjust font size as needed */
+            text-align: center; /* Center text if it spans multiple lines */
+        }
+        .highlighted-table {
+            display: inline-block; /* Ensures the background only covers the text */
+            background-color: white; /* Rectangle color */
+            color: black; /* Text color */
+            /*padding: 10px 20px; /* Padding to create space around the text */
+            border-radius: 5px; /* Optional: Rounds the corners */
+            font-family: 'Bebas Neue', sans-serif; /* Font styling */
+            font-size: 20px; /* Adjust font size as needed */
+            text-align: center; /* Center text if it spans multiple lines */
+            margin-bottom: 10px;
+        }
+        .content-box{
+            white-space: pre-wrap;
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #f4f4f4;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 800px;
+            height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ccc;
+            overflow-x: auto;
+            }
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            width: 80%;
+            max-width: 300px;
+            margin: 0 auto;
+            gap: 10px; /* Space between buttons */
+        }
+
+        .button-container form,
+        .button-container button {
+            flex: 1; /* Make both buttons occupy equal width */
+            width: 100%; /* Ensure buttons take up full container width */
+        }
+
+        .button-container form button,
+        .button-container button {
+            padding: 15px; /* Consistent padding */
+            font-size: 30px;
+            background-color: #000;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Bebas Neue', sans-serif;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+
+        .button-container form button:hover,
+        .button-container button:hover {
+            background-color: #4571a0;
+        }
+               /* Responsive Design */
+               @media (min-width: 600px) {
+            .keep-delete-container {
+                flex-direction: row; /* Display buttons side by side on larger screens */
+            }
+        }
+        @media (min-width: 600px) {
+            .button-container {
+                flex-direction: row;
+                justify-content: space-between;
+                max-width: 600px; /* Wider container on larger screens */
+            }
+            button {
+                width: 48%; /* Two buttons per row */
+                margin: 10px 1%;
+            }
+
+        }
+        
+        @media (max-width: 600px) {
+            .logo img {
+                margin-top: 0px; /* Add top margin for the logo in mobile view */
+            }
+        }
+
+        @media (min-width: 900px) {
+            body {
+                max-width: 2000px; /* Limit width of content on larger screens */
+            }
+            .button-container {
+                max-width: 500px; 
+            }
+            button {
+                font-size: 20px; /* Reduce font size for larger screens */
+                width: 50%; /* Adjust button size for larger screens */
+               
+            }
+        }
+ 
+    </style>
+</head>
+<body>
+    {% if g.process_running %}
+        <div class="banner">PIV Process is running</div>
+    {% endif %}
+
+    <div class="login-container">
+        <h2>Success!</h2>
+        <p>The directories have been copied to the USB drive successfully.</p>
+
+        <h3>Directory Info:</h3>
+        <ul id="dir-list">
+            <!-- This list will be populated by JavaScript -->
+        </ul>
+
+        <h4>New Directory: <span id="new-directory"></span></h4>
+
+    </div>
+    
+    <div class="button-container">
+        <button onclick="goBack()">Back</button>
+    </div>
+
+    <script>
+        // Parse the query parameters from the URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const dirList = JSON.parse(decodeURIComponent(urlParams.get('dir_list')));
+        const newDirectory = decodeURIComponent(urlParams.get('new_directory'));
+
+        // Populate the directory info
+        const dirListElement = document.getElementById('dir-list');
+        dirList.forEach(function(item) {
+            const li = document.createElement('li');
+            li.textContent = `${item.name} (Size: ${item.size}, Date: ${item.date})`;
+            dirListElement.appendChild(li);
+        });
+
+        // Set the new directory path
+        document.getElementById('new-directory').textContent = newDirectory;
+
+        // Function to go back two pages in history
+        function goBack() {
+            window.history.go(-2); // Goes back two pages
+        }
+    </script>
+</body>
+</html>

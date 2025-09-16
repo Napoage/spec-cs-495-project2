@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Utilities Page Instructions</title>
+    <style>
+        @font-face {
+            font-family: 'Bebas Neue';
+            src: url('{{ url_for("static", filename="font/BebasNeue-Regular.ttf") }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            font-family: 'Bebas Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh; 
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            background-image: url("{{ url_for('static', filename='images/app_bg.jpg') }}");
+            background-size: cover;
+            background-attachment: fixed;
+        }
+        .content-box {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            max-width: 800px;
+            width: 90%;
+            margin: 20px;
+            padding: 20px;
+            text-align: left;
+        }
+        h1, h2 {
+            color: #333;
+            text-align: center;
+        }
+        p {
+            font-size: 16px;
+            margin: 10px 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        ul {
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        .image-placeholder {
+            width: 100%;
+            height: 200px;
+            background-color: #ddd;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            color: #666;
+            border: 2px dashed #bbb;
+        }
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #000;
+            color: white;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.2em;
+            font-family: 'Bebas Neue', sans-serif;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #4571a0;
+        }
+    </style>
+</head>
+<body>
+    <div class="content-box">
+        <h1>Utilities Page Instructions</h1>
+        <p>
+            The utilities page provides services for you to use that are not related to PIV or calibration. 
+            Below are the different options available in this section:
+        </p>
+        
+        <h2>Site Info</h2>
+        <p>
+            Site Info allows you to manage details about the PIV site, including:
+        </p>
+        <ul>
+            <li><strong>Site Name</strong>: Assign a name to the site for identification.</li>
+            <li><strong>Site ID</strong>: Assign an ID to uniquely identify the site.</li>
+            <li><strong>Operator</strong>: Specify the operator’s name for tracking purposes.</li>
+            <li><strong>Site Comments</strong>: Add any relevant notes or comments about the physical 
+                site that can be stored for future reference.</li>
+        </ul>
+        
+        <h2>Live Video</h2>
+        <p>
+            The Live Video option allows you to view the camera’s live feed without any processing. 
+            This is simply the raw, undistorted video as seen by the camera.
+        </p>
+        
+        <h2>Data Management</h2>
+        <p>
+            The Save Data page allows you to save all data and then delete data, whether from tests or main PIV runs, to a USB drive. 
+            The process works as follows::
+        </p>
+        <ul>
+            <li>The system will detect if a USB drive is connected.</li>
+            <li>If found, it will copy all files from the <strong>save_data</strong> folder, 
+                which includes all PIV runs and test files.</li>
+            <li>A directory called <strong>OffSiteProcessing</strong> will also be saved. 
+                This directory contains a script that allows you to reprocess the data offsite if needed.</li>
+            <li>You then have the option to delete specific directories</li>
+            <li><strong>Important note: to avoid writing a "dirty" bit to the USB drive that will prevent its further use, press the 
+                UNMOUNT USB drive button prior to removing the USB drive.
+            </strong></li>
+        </ul>
+        
+        <h2>View Logs</h2>
+        <p>
+            The View Logs page provides four log options for troubleshooting and diagnostics:
+        </p>
+        <ul>
+            <li><strong>App Logs</strong>: Logs related to the overall application performance.</li>
+            <li><strong>PIV Logs</strong>: Logs specific to the PIV operations and calculations.</li>
+            <li><strong>Gstreamer Logs</strong>: Logs for the Gstreamer process that streams the camera feed.</li>
+            <li><strong>Loopback Logs</strong>: Logs for the loopback process used to create virtual cameras.</li>
+            <li><strong>Disk Space Logs</strong>: Logs for the disk space manager that will tell what gets deleted if disk becomes full.</li>
+        </ul>
+        <h2>Check Disk Space</h2>
+        <p>
+            This button will display the remaining diskspace and the time till run out based on the last PIV run. 
+            If there is no PIV run or the run is still happening the time till run out will not display. 
+        </p>
+        <h2>Reboot System</h2>
+        <p>
+            If the system is not functioning correctly (e.g., camera is not on, errors are occurring), you can use the 
+            <strong>REBOOT SYSTEM</strong> option to restart the system.
+            Rebooting can often resolve issues by giving the system a fresh start. 
+            All services are programmed to restart automatically after a reboot. 
+            If the system starts up incorrectly, a reboot may be required to get everything working properly.
+        </p>
+
+        <div class="button-container">
+            <button onclick="location.href='/splash_utilities'">Back</button>
+        </div>
+    </div>
+</body>
+</html>

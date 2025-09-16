@@ -1,0 +1,14 @@
+[Unit]
+Description=Starting PIV run script
+After=multi-user.target startCaptivePortal.service
+
+[Service]
+WorkingDirectory=/home/spec/spec
+ExecStart=/bin/bash /home/spec/spec/run_PIV.sh
+StandardOutput=append:/var/log/piv_process.log
+StandardError=append:/var/log/piv_process.log
+Restart=on-failure
+User=spec
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calibrate Splash</title>
+    <style>
+        @font-face {
+            font-family: 'Bebas Neue';
+            src: url('{{ url_for("static", filename="font/BebasNeue-Regular.ttf") }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            font-family: 'Bebas Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh; /* Full viewport height */
+            margin: 0;
+            margin-top: -20;
+            padding: 0;
+            background-color: #f0f0f0;
+            background-image: url("{{ url_for('static', filename='images/app_bg.jpg') }}");
+            background-size: cover;
+            background-attachment: fixed;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 30px;
+        }
+        .banner {
+            background-color: #ffcc00;
+            color: #333;
+            text-align: center;
+            width: 100%;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 1.2em;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+        }
+        .logo {
+            width: 100%;
+            max-width: 300px;
+            height: auto;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            width: 80%;
+            max-width: 300px;
+        }
+
+        button {
+            background-color: #000;
+            color: white;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 30px;
+            font-family: 'Bebas Neue', sans-serif;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #4571a0;
+        }
+        .highlighted-title {
+            display: block; 
+            background-color: white; /* Rectangle color */
+            color: black; /* Text color */
+            padding: 10px 20px; /* Padding to create space around the text */
+            border-radius: 5px; /* Optional: Rounds the corners */
+            font-family: 'Bebas Neue', sans-serif; /* Font styling */
+            font-size: 24px; /* Adjust font size as needed */
+            text-align: center; /* Center text if it spans multiple lines */
+            width: 45%;
+        }
+        /* Responsive Design */
+        @media (min-width: 600px) {
+            .button-container {
+                flex-direction: row;
+                justify-content: space-between;
+                max-width: 600px; /* Wider container on larger screens */
+            }
+            button {
+                width: 48%; /* Two buttons per row */
+                margin: 10px 1%;
+            }
+
+        }
+        
+        @media (max-width: 600px) {
+            .logo img {
+                margin-top: 0px; /* Add top margin for the logo in mobile view */
+            }
+            .highlighted-title{
+                width: 100%;
+            }
+        }
+
+        @media (min-width: 900px) {
+            body {
+                max-width: 2000px; /* Limit width of content on larger screens */
+            }
+            .button-container {
+                max-width: 500px; 
+            }
+            button {
+                font-size: 20px; /* Reduce font size for larger screens */
+                width: 50%; /* Adjust button size for larger screens */
+               
+            }
+        }
+    </style>
+</head>
+<body>
+    {% if g.process_running %}
+        <div class="banner">PIV Process is running</div>
+    {% endif %}
+    <div class="logo">
+        <img src="{{ url_for('static', filename='images/SPEC_logo.png') }}" alt="Logo" style="width: 120%; height: auto; border-radius: 10px;margin-top: 30px;">
+    </div>
+
+    <h1 class="highlighted-title">{{ message }}</h1>
+    <div class="button-container">
+        <button onclick="location.href='/calibrate_trapezoid_instructions'">Calibrate</button>
+        <button onclick="location.href='/splash'">Main Menu</button>
+        <button onclick="location.href='/calibrate_splash_instructions'">Instructions</button>
+    </div>
+
+    <!-- <div class="logo">
+        <img src="../static/images/DA_logo.jpg" alt="Logo" style="width: 40%; height: auto; border-radius: 10px; ">
+    </div> -->
+</body>
+</html>

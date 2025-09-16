@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preload" href="{{ url_for('static', filename='font/BebasNeue-Regular.ttf') }}" as="font" type="font/ttf" crossorigin="anonymous">
+    <title>Processing Logs</title>
+    <style>
+        @font-face {
+            font-family: 'Bebas Neue';
+            src: url('{{ url_for("static", filename="font/BebasNeue-Regular.ttf") }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            font-family: 'Bebas Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            background-image: url("{{ url_for('static', filename='images/app_bg.jpg') }}");
+            background-size: cover;
+            background-attachment: fixed;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #log-container {
+            font-size: 18px;
+            color: #333;
+            margin-top: 20px;
+            text-align: left;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+        }
+
+        .log-entry {
+            margin: 5px 0;
+            padding: 2px 5px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .heartbeat {
+            color: #888;
+            font-style: italic;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+<body>
+    <div>
+        <div class="spinner"></div>
+        <div id="log-container">Waiting for updates...</div>
+    </div>
+
+    <script>
+        const logContainer = document.getElementById('log-container');
+        let lastMessageTime = Date.now();
+        let redirectTriggered = false;
+
+        function appendLogEntry(text, isHeartbeat = false, isError = false) {
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            if (isHeartbeat) {
+                entry.className += ' heartbeat';
+            }
+            if (isError) {
+                entry.className += ' error';
+            }
+            entry.textContent = text;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function startLogStream() {
+            if (window.eventSource) {
+                window.eventSource.close();
+            }
+
+            window.eventSource = new EventSource('/stream');
+
+            window.eventSource.onmessage = function(event) {
+                lastMessageTime = Date.now();
+
+                // Silently handle heartbeat messages
+                if (event.data === '...') {
+                    return;
+                }
+
+                // Silently handle waiting for log file message
+                if (event.data.includes('Waiting for log file')) {
+                    return;
+                }
+
+                // Handle regular log messages
+                if (event.data.trim()) {  // Only append non-empty messages
+                    appendLogEntry(event.data);
+                }
+
+                // Check if we should redirect (e.g., when seeing completion message)
+                if (!redirectTriggered && (event.data.includes('Test completed') || event.data.includes('FINISHED PIV') || event.data.includes('Ensemble PIV completed'))) {
+                    redirectTriggered = true;
+                    window.eventSource.close();
+                    appendLogEntry('Process complete! Redirecting to results...');
+                    setTimeout(() => {
+                        window.location.href = '/results';
+                    }, 2000);
+                }
+            };
+
+            window.eventSource.onerror = function(error) {
+                appendLogEntry('Connection error. Attempting to reconnect...', false, true);
+                setTimeout(startLogStream, 2000); // Try to reconnect after 2 seconds
+            };
+        }
+
+        // Start the log stream
+        startLogStream();
+
+        // Check for stale connection every 10 seconds
+        setInterval(() => {
+            if (Date.now() - lastMessageTime > 10000) { // 10 seconds without messages
+                appendLogEntry('Connection appears stale. Reconnecting...', false, true);
+                startLogStream();
+            }
+        }, 10000);
+
+        // Cleanup when leaving the page
+        window.onbeforeunload = function() {
+            if (window.eventSource) {
+                window.eventSource.close();
+            }
+        };
+
+        // Start the test script after stream is established
+        setTimeout(function() {
+            fetch('/run_test_script')
+                .catch(error => {
+                    appendLogEntry('Error starting test script: ' + error, false, true);
+                });
+        }, 2000);
+    </script>
+</body>
+</html>

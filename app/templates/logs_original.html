@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="preload" href="{{ url_for('static', filename='font/BebasNeue-Regular.ttf') }}" as="font" type="font/ttf" crossorigin="anonymous">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Logs</title>
+    <style>
+        @font-face {
+            font-family: 'Bebas Neue';
+            src: url('{{ url_for("static", filename="font/BebasNeue-Regular.ttf") }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            font-family: 'Bebas Neue', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            background-image: url("{{ url_for('static', filename='images/app_bg.jpg') }}");
+            background-size: cover;
+            background-attachment: fixed;
+        }
+        .content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 100px 40px 20px;
+            box-sizing: border-box;
+        }
+        .logo {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            width: 80%;
+            max-width: 300px;
+            height: auto;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            width: 80%;
+            max-width: 300px;
+            margin-bottom: 0px;
+        }
+        .log-button {
+            background-color: #000;
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            text-align: center;
+            transition: background-color 0.3s;
+            width: 30%;
+            max-width: 200px;
+        }
+        .log-button:hover {
+            background-color: #4571a0;
+        }
+        .log-container {
+            white-space: pre-wrap;
+            background-color: #f4f4f4;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 800px;
+            height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        .refresh-button {
+            background-color: #000;
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        .refresh-button:hover {
+            background-color: #4571a0;
+        }
+        .logo img {
+            width: 40%;
+            height: auto;
+            border-radius: 10px;
+            margin: 0 10px;
+        }
+    </style>
+    <script>
+        function loadLog(logType) {
+            fetch(`/logs/${logType}`)
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('log-content').innerText = data;
+                })
+                .catch(error => console.error('Error loading log:', error));
+        }
+    </script>
+</head>
+<body>
+    <div class="content">
+
+        <h1>System Logs</h1>
+        <div class="button-container">
+            <button class="log-button" onclick="loadLog('app')">APP Logs</button>
+            <button class="log-button" onclick="loadLog('piv')">PIV Logs</button>
+            <button class="log-button" onclick="loadLog('gstreamer')">GStreamer Logs</button>
+            <button class="log-button" onclick="loadLog('loopback')">Loopback Logs</button>
+        </div>
+        <div class="log-container" id="log-content">
+            Select a log to view its content.
+        </div>
+        <button class="refresh-button" onclick="location.reload();">Refresh Logs</button>
+        <button class="refresh-button" onclick="location.href='/splash'">Main Menu</button>
+        
+
+    </div>
+    <div class="logo">
+        <img src="{{ url_for('static', filename='images/DA_logo.jpg') }}" alt="Logo">
+
+        
+    </div>
+</body>
+</html>

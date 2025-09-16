@@ -1,0 +1,13 @@
+[Unit]
+Description=Disk Space Manager
+After=multi-user.target startCaptivePortal.service
+
+[Service]
+ExecStart=/usr/bin/python3 /home/spec/spec/System/disk_space_manager.py
+StandardOutput=append:/var/log/disk_space.log
+StandardError=append:/var/log/disk_space.log
+Restart=on-failure
+User=root
+
+[Install]
+WantedBy=multi-user.target

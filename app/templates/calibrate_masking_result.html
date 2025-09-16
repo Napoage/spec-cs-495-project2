@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preload" href="{{ url_for('static', filename='font/BebasNeue-Regular.ttf') }}" as="font" type="font/ttf" crossorigin="anonymous">
+    <title>Masking Result</title>
+    <style>
+        @font-face {
+            font-family: 'Bebas Neue';
+            src: url('{{ url_for("static", filename="font/BebasNeue-Regular.ttf") }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Bebas Neue', sans-serif;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            background-color: #f0f0f0;
+            background-image: url("{{ url_for('static', filename='images/app_bg.jpg') }}");
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-attachment: fixed; 
+
+        }
+        .container {
+
+            width: 100%;
+            max-width: 800px;
+            padding-top: 20px;
+
+        }
+        .logo-container {
+            display: flex;
+            /*align-items: center;*/
+            justify-content: center;
+            margin-bottom: 10px;
+            padding-top: 20px;
+        }
+
+        .logo {
+            width: 80%;
+            max-width: 300px;
+            height: auto;
+            margin-left: 20px;
+        }
+        .image-container {
+            display: block;
+            justify-content: space-around; /* Ensure space between the images */
+        }
+        .image-container img {
+            width: 80%; /* Set the width to 80% of the container's width */
+            max-width: 600px; /* Limit the maximum width */
+            height: auto; /* Maintain aspect ratio */
+        }
+        .image-container div {
+            text-align: center; /* Center the headings */
+        }
+        /* Button Styling */
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+
+        .banner {
+            background-color: #ffcc00;
+            color: #333;
+            text-align: center;
+            width: 100%;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 1.2em;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+        }
+        button {
+            background-color: #000;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Bebas Neue';
+            font-size: 24px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #4571a0;
+        }
+
+        .highlighted-title {
+            display: inline-block; /* Ensures the background only covers the text */
+            background-color: white; /* Rectangle color */
+            color: black; /* Text color */
+            padding: 10px 20px; /* Padding to create space around the text */
+            border-radius: 5px; /* Optional: Rounds the corners */
+            font-family: 'Bebas Neue', sans-serif; /* Font styling */
+            font-size: 32px; /* Adjust font size as needed */
+            text-align: center; /* Center text if it spans multiple lines */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .highlighted-subtitle {
+            display: block; /* Ensures the background only covers the text */
+            background-color: white; /* Rectangle color */
+            color: black; /* Text color */
+            padding: 10px 20px; /* Padding to create space around the text */
+            border-radius: 5px; /* Optional: Rounds the corners */
+            font-family: 'Bebas Neue', sans-serif; /* Font styling */
+            font-size: 14px; /* Adjust font size as needed */
+            text-align: center; /* Center text if it spans multiple lines */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Responsive Design */
+        @media (min-width: 600px) {
+            .image-container {
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!--<div class="container">-->
+    {% if g.process_running %}
+        <div class="banner">PIV Process is running</div>
+    {% endif %}
+
+    <h1 class="highlighted-title">Masking Result</h1>
+
+    <div class="image-container">
+
+        <div>
+            <h2 class="highlighted-subtitle">Original Image</h2>
+            <img src="{{ original_image }}" alt="Original Image">
+        </div>
+        <div>
+            <h2 class="highlighted-subtitle">Mask</h2>
+            <img src="{{ mask_image }}" alt="Generated Mask">
+        </div>
+        <div>
+            <h2 class="highlighted-subtitle">Masked Image</h2>
+            <img src="{{ masked_image }}" alt="Masked Image">
+        </div>
+    </div>
+
+    <div class=button-container>
+        <button id="saveMaskPathButton">Save Mask</button>
+        <button onclick="location.href='/calibrate_masking_options'">Reset Mask</button>
+        <button onclick="location.href='/test'">Run Test</button>
+        <button onclick="location.href='/calibrate_splash'" type="button">Calibration Main Menu</button>
+    </div>
+<!--</div>--> <!--end of container-->
+    <script>
+        document.getElementById('saveMaskPathButton').onclick = function() {
+            const maskPath = "{{ mask_image }}";  // Assuming mask_image contains the path you want to save
+            fetch('/save_mask_path', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ mask_path: maskPath }),
+            }).then(response => {
+                if (response.ok) {
+                    alert('Mask path saved successfully!');
+                } else {
+                    alert('Failed to save mask path.');
+                }
+            });
+        };
+    </script>
+</body>
+</html>

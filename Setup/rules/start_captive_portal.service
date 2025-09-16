@@ -1,0 +1,16 @@
+[Unit]
+Description=Restarting dnsmasq, nginx, and hostapd and running iptables command for captive portal
+After=network.target network-online.target multi-user.target
+Requires=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/home/spec/spec/System/captive_start.sh
+RemainAfterExit=yes
+Type=onshot
+Restart=on-failure
+User=root
+
+
+[Install]
+WantedBy=multi-user.target

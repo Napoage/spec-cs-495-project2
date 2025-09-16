@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trapezoid Calibration</title>
+    <style>
+        @font-face {
+            font-family: 'Bebas Neue';
+            src: url('{{ url_for("static", filename="font/BebasNeue-Regular.ttf") }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            font-family: 'Bebas Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh; 
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            background-image: url("{{ url_for('static', filename='images/app_bg.jpg') }}");
+            background-size: cover;
+            background-attachment: fixed;
+        }
+        p {
+            font-size: 16px;
+            margin: 10px 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        ul {
+            font-size: 16px;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+
+        .banner {
+            background-color: #ffcc00;
+            color: #333;
+            text-align: center;
+            width: 100%;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 1.2em;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+        }
+        .spacer {
+            height: 60px;
+            width: 100%;
+        }
+
+        .text-box {
+            background-color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            width: 90%;
+            max-width: 800px;
+            margin: 20px auto;
+            text-align: left;
+            line-height: 1.5;
+            color: #333;
+        }
+        .text-box h1, .text-box h2 {
+            text-align: center;
+        }
+        .text-box img {
+            max-width: 100%;
+            height: auto;
+            margin: 20px auto;
+            display: block;
+        }
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            width: 90%;
+            max-width: 800px;
+        }
+        button {
+            background-color: #000;
+            color: white;
+            padding: 15px 30px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            font-family: 'Bebas Neue', sans-serif;
+            text-align: center;
+            transition: background-color 0.3s;
+            flex: 1;
+        }
+        button:hover {
+            background-color: #4571a0;
+        }
+        button + button {
+            margin-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    {% if g.process_running %}
+        <div class="banner">PIV Process is running</div>
+    {% endif %}
+    <div class="spacer"></div>
+    <div class="text-box">
+        <h1>Trapezoid Calibration</h1>
+        <p>
+            This page is used to select the region of the image that you would like to run a PIV calculation.
+            This is not a mask but the area that will be transformed to give a bird's-eye or nadir view of the bank-mounted image 
+            in order for the PIV algorithm to run correctly.
+        </p>
+        <h2>Roll Angle</h2>
+        <p>
+            On this page, you will see a bubble level at the top, displaying the roll angle of the SPEC based on the IMU.
+            The roll angle is the angle you move the device on its sides. You want the roll angle to be 0°, in other words level,
+            as other values may introduce errors in PIV calculations.
+        </p>
+        <img src="{{ url_for('static', filename='images/roll_angle_diagram.jpg') }}" alt="Roll Angle Diagram">
+        <img src="{{ url_for('static', filename='images/roll_angle_display.jpg') }}" alt="Roll Angle Display">
+        <h2>Trapezoid View</h2>
+        <p>
+            The next item displayed is a live video with a trapezoid overlaid on it. The area inside the trapezoid will be 
+            used for PIV calculations. As you incline the camera up and down, the trapezoid's left and right sides adjust based on the 
+            IMU’s position relative to nadir. At nadir, the trapezoid appears rectangular, but as the tilt (pitch) approaches 90°, 
+            the sides converge.
+        </p>
+        <img src="{{ url_for('static', filename='images/trapezoid_view.jpg') }}" alt="Trapezoid View Diagram">
+        <h2>Adjusting the Trapezoid</h2>
+        <p>
+            To move the trapezoid, use the sliders below the live view. Adjusting one point recalculates the trapezoid, 
+            resetting all points. Aim to include as much of the river or PIV region of interest as possible within the trapezoid.
+            Banks or other objects can be masked out later.
+        </p>
+        <img src="{{ url_for('static', filename='images/adjust_trapezoid.jpg') }}" alt="Adjusting Trapezoid">
+        <h2>Finalizing the Trapezoid</h2>
+        <p>
+            Once satisfied with the trapezoid, click <strong>SHOW TRANSFORMED IMAGE</strong> to view the transformed image. 
+            Ensure the desired area for PIV is visible. Repeat the following steps as needed:
+        </p>
+        <ul>
+            <li>Adjust camera tilt (up-down angle)</li>
+            <li>Set roll (side-to-side angle) to 0°</li>
+            <li>Move trapezoid points</li>
+            <li>Show transformed image</li>
+        </ul>
+        <p>
+            When finished, click <strong>SAVE POINTS</strong> to save the trapezoid configuration, then click <strong>NEXT STEP</strong> to proceed.
+        </p>
+    </div>
+    <div class="button-container">
+        <button onclick="history.back()">Back</button>
+    </div>
+    <!-- <div class="button-container">
+        <button onclick="location.href='/trapezoid'">Back to Trapezoid</button>
+        <button onclick="location.href='/splash'">Main Menu</button>
+    </div> -->
+</body>
+</html>

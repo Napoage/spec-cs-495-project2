@@ -1,0 +1,47 @@
+/var/log/piv_process.log
+{
+    su root root
+    missingok
+    nocreate
+    notifempty
+    rotate 6
+    compress
+    delaycompress
+    size 50K
+}
+
+/var/log/spec_app.log
+{
+    su root root
+    missingok
+    nocreate
+    notifempty
+    rotate 6
+    compress
+    delaycompress
+    size 50K 
+}
+
+/var/log/gstreamer.log
+{
+    su root root
+    missingok
+    nocreate
+    notifempty
+    rotate 6
+    compress
+    delaycompress
+    size 50K
+}
+
+/var/log/disk_space.log
+{
+    su root root
+    missingok
+    nocreate
+    notifempty
+    rotate 6
+    compress
+    delaycompress
+    size 50K
+}

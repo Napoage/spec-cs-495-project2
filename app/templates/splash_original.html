@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Splash</title>
+    <style>
+        @font-face {
+            font-family: 'Bebas Neue';
+            src: url('{{ url_for("static", filename="font/BebasNeue-Regular.ttf") }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            font-family: 'Bebas Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh; /* Full viewport height */
+            margin: 0;
+            margin-top: 20;
+            padding: 0;
+            background-color: #f0f0f0;
+            background-image: url("{{ url_for('static', filename='images/app_bg.jpg') }}");
+            background-size: cover;
+            background-attachment: fixed;
+        }
+        .content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 100px 40px 20px;
+            box-sizing: border-box;
+        }
+        .logo {
+            position: sticky; /* Keeps the logo in view as you scroll */
+            top: 0; /* Sticks to the top of the viewport */   
+            z-index: 10; /* Ensures the logo stays on top of other elements */
+            width: 80%;
+            max-width: 300px;
+            height: auto;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+        }
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            width: 80%;
+            max-width: 300px;
+            margin-bottom: 0px;
+
+        }
+        button {
+            background-color: #000;
+            color: white;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 30px;
+            font-family: 'Bebas Neue', sans-serif;
+            text-align: center;
+            transition: background-color 0.3s;
+            
+        }
+        button:hover {
+            background-color: #4571a0;
+        }
+        /* Responsive Design */
+        @media (min-width: 600px) {
+            .button-container {
+                flex-direction: row;
+                justify-content: space-between;
+                max-width: 600px; 
+            }
+            button {
+                width: 48%; /* Two buttons per row */
+                margin: 10px 1%;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .logo img {
+                margin-top: 20px; /* Add top margin for the logo in mobile view */
+            }
+        }
+
+        @media (min-width: 900px) {
+            body {
+                max-width: 2000px; /* Limit width of content on larger screens */
+            }
+            .button-container {
+                max-width: 500px; 
+            }
+            button {
+                font-size: 20px; /* Reduce font size for larger screens */
+                width: 30%; /* Adjust button size for larger screens */
+               
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <div class="button-container">
+            <button onclick="location.href='/trapezoid'">Trapezoid Calibration</button>
+            <button onclick="location.href='/piv_parameters'">PIV Parameters</button>
+            <button onclick="location.href='/masking_options'">Masking Option</button>
+        </div>
+        <div class="button-container"> 
+            <button onclick="location.href='/test'">Run Test</button>
+            <button onclick="location.href='/results'">Results</button>
+            <button onclick="location.href='/video_feed'">Live Video</button>
+            <button onclick="location.href='/site_info'">System Configuration</button>
+            <button onclick="location.href='/save_data'">Save & Run</button>
+        </div>
+        <div class="logo">
+            <img src="../static/images/DA_logo.jpg" alt="Logo" style="width: 40%; height: auto; border-radius: 10px; ">
+        </div>
+    </div>
+</body>
+</html>

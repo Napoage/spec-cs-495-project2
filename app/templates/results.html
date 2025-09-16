@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preload" href="{{ url_for('static', filename='font/BebasNeue-Regular.ttf') }}" as="font" type="font/ttf" crossorigin="anonymous">
+    <title>Results</title>
+    <!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">-->
+    <style>
+        @font-face {
+            font-family: 'Bebas Neue';
+            src: url('{{ url_for("static", filename="font/BebasNeue-Regular.ttf") }}') format('truetype');
+        }
+        body {
+            font-family: 'Bebas Neue', Arial, sans-serif;
+            display: flex;
+            /*flex-direction: column;*/
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh; /* Full viewport height */
+            margin: 0;
+            padding: 0;
+            background-color: #bbbbbb;
+            background-image: url("{{ url_for('static', filename='images/app_bg.jpg') }}");
+            background-size: cover;
+            background-attachment: fixed;
+
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            max-width: 800px; /* Set a max width for the container */
+            margin: auto; /* Center the container horizontally */
+            padding: 20px; /* Add padding for spacing */
+            background-color: #ffffff; /* Optional: set a background color for contrast */
+            border-radius: 10px; /* Optional: add rounded corners */
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* Optional: add a subtle shadow */
+        }
+        #velocity-graph {
+            max-width: 100%;
+            height: auto;
+            border: 2px solid black;
+            margin: 20px auto; /* Center the graph */
+        }
+        .button-group {
+            margin: 20px 0;
+        }
+        .button-group button {
+            margin: 5px;
+            padding: 10px;
+            font-size: 18px;
+            background-color: #000;
+            color: white;
+        }
+        .banner {
+            background-color: #ffcc00;
+            color: #333;
+            text-align: center;
+            width: 100%;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 1.2em;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+        }
+        h1, h2 {
+            margin-top: 20px;
+        }
+        button {
+            background-color: #000;
+            color: white;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 30px;
+            font-family: 'Bebas Neue';
+            text-align: center;
+            transition: background-color 0.3s;
+            width: 100%; /* Make the button take the full width of its container */
+            max-width: 300px; /* Set a maximum width to prevent it from being too wide */
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .text-center {
+            display: flex;
+            justify-content: center; /* Center content horizontally */
+            align-items: center; /* Center content vertically */
+            flex-direction: column; /* Stack items vertically */
+            width: 100%; /* Make it take the full width of the parent container */
+            margin: 20px 0; /* Add some spacing around it */
+        }
+        /* Additional styles for side-by-side dropdowns */
+        .dropdown-container {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center; /* Vertically center items */
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            gap: 20px; /* Add space between the dropdowns */
+            width: 100%; /* Ensure the container spans the full width */
+            margin: 0 auto;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column; /* Stack the label and dropdown vertically */
+            align-items: center; 
+            width: 200px; /* Set a fixed width for uniform alignment */
+        }
+        .form-group label {
+            margin-bottom: 5px; /* Add spacing between the label and the dropdown */
+            font-size: 16px; /* Ensure the label is readable */
+            text-align: center; /* Center the label text */
+        }
+        .form-group:last-child {
+            margin-right: 0; /* Remove margin from the last element */
+        }
+        .highlighted-title {
+            display: inline-block; /* Ensures the background only covers the text */
+            background-color: white; /* Rectangle color */
+            color: black; /* Text color */
+            padding: 10px 20px; /* Padding to create space around the text */
+            border-radius: 5px; /* Optional: Rounds the corners */
+            font-family: 'Bebas Neue', sans-serif; /* Font styling */
+            font-size: 30px; /* Adjust font size as needed */
+            text-align: center; /* Center text if it spans multiple lines */
+        }
+        #csv-data {
+            max-height: 300px; /* Limit the height of the CSV display area */
+            overflow-y: auto;  /* Enable vertical scrolling */
+            overflow-x: auto;  /* Enable horizontal scrolling if needed */
+            border: 1px solid #ccc; /* Optional: add a border for clarity */
+            padding: 10px; /* Optional: padding for better readability */
+            background-color: #fff; /* Optional: background color for contrast */
+            margin-top: 20px; /* Space between the header and the data */
+            width: 100%; /* Ensure it takes up the full width of the container */
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        
+        /* Responsive Design */
+        @media (min-width: 600px) {
+            .button-container {
+                flex-direction: row;
+                justify-content: space-between;
+                max-width: 600px; /* Wider container on larger screens */
+            }
+            button {
+                width: 100%; /* Two buttons per row */
+                margin: 10px 1%;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .logo img {
+                margin-top: 0px; /* Add top margin for the logo in mobile view */
+            }
+            .highlighted-title{
+                width: 65%;
+            }        
+        }
+
+        @media (min-width: 900px) {
+            body {
+                max-width: 2000px; /* Limit width of content on larger screens */
+            }
+
+            .button-container {
+                flex-direction: row; /* Arrange buttons in rows */
+                flex-wrap: wrap; /* Allow wrapping to the next line if needed */
+                justify-content: space-between; /* Distribute space evenly */
+                max-width: 100%; /* Allow wider container for buttons */
+            }
+
+            button {
+                width: 80%; /* Wider buttons for larger screens */
+                max-width: 400px; /* Allow a larger max width on bigger screens */
+            }
+        }
+    </style>
+</head>
+<body>
+    {% if g.process_running %}
+        <div class="banner">PIV Process is running</div>
+    {% endif %}
+    <div class="container">
+        <h1 class="highlighted-title">Results</h1>
+
+        <!-- Dropdowns for selecting config and run -->
+        <div class="dropdown-container">
+            <div class="form-group">
+                <label for="config-select">Choose Configuration Date:</label>
+                <select id="config-select" class="form-control">
+                    {% for config in config_dirs %}
+                    <option value="{{ config }}">{{ config }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="run-select">Choose Run:</label>
+                <select id="run-select" class="form-control">
+                    <!-- Options dynamically populated based on selected config -->
+                </select>
+            </div>
+        <!--</div>-->
+
+        <!-- Dropdowns for display settings -->
+        <!--<div class="dropdown-container">-->
+            <div class="form-group">
+                <label for="overlay-select">Overlay Type:</label>
+                <select id="overlay-select" class="form-control">
+                    <option value="image">Vectors Over Image</option>
+                    <option value="magnitude">Vectors Over Magnitude</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="unit-select">Unit:</label>
+                <select id="unit-select" class="form-control">
+                    <option value="mps">Meters per second (m/s)</option>
+                    <option value="fps">Feet per second (ft/s)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Button to generate the graph -->
+        <div class="text-center button-group">
+            <button id="generate-graph-button">Generate Graph</button>
+        </div>
+
+        <!-- Display the graph -->
+        <div class="text-center">
+            <h2>Velocity Graph</h2>
+            <img id="velocity-graph" src="" alt="Velocity Graph">
+        </div>
+
+        <!-- Dropdown for CSV data -->
+        <div class="form-group">
+            <label for="csv-select">Choose CSV Data:</label>
+            <select id="csv-select" class="form-control">
+                <option value="blank"></option>
+                <option value="xPiv">X Coordinates</option>
+                <option value="yPiv">Y Coordinates</option>
+                <option value="uScale">X Velocity Vector Component (m/s)</option>
+                <option value="vScale">Y Velocity Vector Component (m/s)</option>
+                <option value="magScale">Velocity Magnitude (m/s)</option>
+                <option value="uScale_fps">X Velocity Vector Component (ft/s)</option>
+                <option value="vScale_fps">Y Velocity Vector Component (ft/s)</option>
+                <option value="magScale_fps">Velocity Magnitude (ft/s)</option>
+            </select>
+        </div>
+
+        <!-- CSV Data display section -->
+        <div class="text-center">
+            <h2>CSV Data</h2>
+            <div id="csv-data" class="table-responsive">
+                <!-- CSV data will be injected here -->
+            </div>
+        </div>
+
+        <div class="text-center button-group">
+            <button onclick="location.href='/splash'">Main Menu</button>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript to handle dynamic content loading
+        document.addEventListener('DOMContentLoaded', function () {
+            const configSelect = document.getElementById('config-select');
+            const runSelect = document.getElementById('run-select');
+            const overlaySelect = document.getElementById('overlay-select');
+            const unitSelect = document.getElementById('unit-select');
+            const velocityGraph = document.getElementById('velocity-graph');
+            const csvSelect = document.getElementById('csv-select');
+            const generateGraphButton = document.getElementById('generate-graph-button');
+
+            // Attach event listener to configSelect
+            configSelect.addEventListener('change', function () {
+                fetchRuns(configSelect.value);
+            });
+
+            // Automatically fetch runs for the selected config on page load
+            if (configSelect.options.length > 0) {
+                // Pre-select the first (newest) configuration and fetch its runs
+                fetchRuns(configSelect.value);
+            }
+
+            // Attach click event for the generate graph button
+            generateGraphButton.addEventListener('click', showGraph);
+
+            // Fetch and display CSV data
+            csvSelect.addEventListener('change', function () {
+                viewCSV(configSelect.value, runSelect.value, csvSelect.value);
+            });
+        });
+
+        // Function to fetch runs for the selected configuration
+        function fetchRuns(configDir) {
+            fetch('/results/get_runs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ config_dir: configDir })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const runSelect = document.getElementById('run-select');
+                runSelect.innerHTML = ''; // Clear previous options
+
+                if (data.runs) {
+                    data.runs.forEach(run => {
+                        runSelect.innerHTML += `<option value="${run}">${run}</option>`;
+                    });
+
+                    // Automatically select the first run and generate the graph
+                    if (data.runs.length > 0) {
+                        runSelect.value = data.runs[0];
+                        showGraph(); // Generate graph for the first run
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching runs:', error);
+            });
+        }
+
+        // Function to dynamically show the graph based on the selected options
+        function showGraph() {
+            const configDir = document.getElementById('config-select').value;
+            const run = document.getElementById('run-select').value;
+            const unit = document.getElementById('unit-select').value;
+            const displayType = document.getElementById('overlay-select').value;
+
+            if (configDir && run) {
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', `/results/graph_data?config_dir=${configDir}&run=${run}&unit=${unit}&display_type=${displayType}`, true);
+                xhr.onload = function () {
+                    if (xhr.status === 200) {
+                        const response = JSON.parse(xhr.responseText);
+                        const velocityGraph = document.getElementById('velocity-graph');
+                        if (response.url) {
+                            const timestamp = new Date().getTime(); // Generate a unique timestamp
+                            velocityGraph.src = `${response.url}?t=${timestamp}`; // Add the timestamp as a query parameter
+                            velocityGraph.style.display = 'block'; // Show the image
+                        } else {
+                            console.error('No URL returned in response:', response);
+                        }
+                    } else {
+                        console.error('Error fetching velocity graph:', xhr.responseText);
+                    }
+                };
+                xhr.onerror = function () {
+                    console.error('Request failed');
+                };
+                xhr.send();
+            }
+        }
+
+    
+        // JavaScript to view CSV data
+        function viewCSV(configDir, run, filename) {
+            fetch('/results/get_csv_data', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ config_dir: configDir, run: run, filename: filename })
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.text(); // Return the response as text
+                }
+                throw new Error('Network response was not ok');
+            })
+            .then(data => {
+                const csvDataDiv = document.getElementById('csv-data');
+                csvDataDiv.innerHTML = data; // Inject HTML table
+            })
+            .catch(error => {
+                console.error('Error fetching CSV data:', error);
+                const csvDataDiv = document.getElementById('csv-data');
+                csvDataDiv.innerHTML = '<p>Error loading CSV data.</p>'; // Show error message
+            });
+        }
+    </script>
+</body>
+</html>
+

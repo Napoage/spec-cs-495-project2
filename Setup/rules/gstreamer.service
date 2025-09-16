@@ -1,0 +1,12 @@
+[Unit]
+Description=GStreamer Video Streaming Service
+After=multi-user.target
+
+[Service]
+ExecStart=/bin/bash /home/spec/spec/System/start_loopback_streams.sh
+StandardOutput=append:/var/log/gstreamer.log
+StandardError=append:/var/log/gstreamer.log
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

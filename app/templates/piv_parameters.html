@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<link rel="preload" href="{{ url_for('static', filename='font/BebasNeue-Regular.ttf') }}" as="font" type="font/ttf" crossorigin="anonymous">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIV Parameter Configuration</title>
+    <style>
+        @font-face {
+            font-family: 'Bebas Neue';
+            src: url('{{ url_for("static", filename="font/BebasNeue-Regular.ttf") }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body {
+            font-family: 'Bebas Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh; /* Full viewport height */
+            margin: 0;
+            margin-top: -20;
+            padding: 0;
+            background-color: #f0f0f0;
+            background-image: url("{{ url_for('static', filename='images/app_bg.jpg') }}");
+            background-size: cover;
+            background-attachment: fixed;
+        }
+
+        h1 {
+            font-size: 40px;
+            text-align: center;
+        }
+        .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo {
+            width: 80%;
+            max-width: 300px;
+            height: auto;
+            /*margin-bottom: -20px;*/
+
+        }
+
+        /* Main container should take full height */
+        .container {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            /*overflow-y: auto; /* Allow scrolling */
+        }
+
+        /* Video container styles (can be removed or customized if needed) */
+        .video-container {
+            flex: 1;
+            background-color: #000;
+            height: 200px; /* Set a fixed height for the video on mobile */
+        }
+
+        /* Config container should allow scrolling on overflow */
+        .config-container {
+            padding: 10px;
+            background-color: #ccc;
+            flex: 1;
+            overflow-y: auto; /* Scrollable form container */
+        }
+
+        .config-item {
+            margin-bottom: 10px;
+        }
+
+        .config-item label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        /* Input and Select Styling */
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0 10px 0;
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+            font-size: 16px;
+            background-color: #f9f9f9;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        input[type="number"]:focus,
+        select:focus {
+            border-color: #66afe9;
+            box-shadow: 0 0 8px rgba(102, 175, 233, 0.6);
+            outline: none;
+        }
+
+        .info-text {
+            font-size: 14px;
+            font-style: italic;
+            color: #000; 
+            margin-top: 0px; /* Add space between the input box and the text */
+        }
+
+        /* Button Styling */
+        .button-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+        .banner {
+            background-color: #ffcc00;
+            color: #333;
+            text-align: center;
+            width: 100%;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 1.2em;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+        }
+        .spacer { 
+            height: 60px; /* Match the height of the banner */ 
+            width: 100%; 
+        }
+        button {
+            background-color: #000;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Bebas Neue';
+            font-size: 20px;
+            transition: background-color 0.3s;
+            margin-left: 5px;
+            margin-right: 5px;
+            
+        }
+
+        button:hover {
+            background-color: #4571a0;
+        }
+        .highlighted-title {
+            display: inline-block; /* Ensures the background only covers the text */
+            background-color: white; /* Rectangle color */
+            color: black; /* Text color */
+            padding: 10px 20px; /* Padding to create space around the text */
+            border-radius: 5px; /* Optional: Rounds the corners */
+            font-family: 'Bebas Neue', sans-serif; /* Font styling */
+            font-size: 30px; /* Adjust font size as needed */
+            text-align: center; /* Center text if it spans multiple lines */
+        }
+       /* Responsive Design */
+       @media (min-width: 600px) {
+            .button-container {
+                flex-direction: row;
+                justify-content: space-between;
+                max-width: 600px; /* Wider container on larger screens */
+            }
+            button {
+                width: 48%; /* Two buttons per row */
+                margin: 10px 1%;
+            }
+        @media (max-width: 600px) {
+            .logo img {
+                margin-top: 20px; /* Add top margin for the logo in mobile view */
+            }
+        }
+
+        @media (min-width: 900px) {
+            body {
+                max-width: 3000px; 
+            }
+            .button-container {
+                max-width: 500px; 
+            }
+            button {
+                font-size: 20px; /* Reduce font size for larger screens */
+                width: 30%; /* Adjust button size for larger screens */
+               
+            }
+        }
+    } 
+    </style>
+</head>
+<body>
+    {% if g.process_running %}
+        <div class="banner">PIV Process is running</div>
+    {% endif %}
+    <div class="spacer"></div>
+    <div class="logo-container">
+        <img src="{{ url_for('static', filename='images/SPEC_logo.png') }}" class="logo" alt="Logo" style="width: 100%; height: auto; border-radius: 10px; margin-top: 20px; margin-bottom: 5px">
+    </div>
+    <div class="container">
+
+
+        <h2 class="highlighted-title">PIV Parameter Config</h2>
+
+        <div class="config-container">
+            <form id="configForm">
+                <div class="config-item">
+                    <label for="idealresolution">Desired Output Vector Spacing (m)</label>
+                    <input type="number" step="0.001" id="idealresolution" name="idealresolution" value="{{config.get('idealresolution')}}" step="0.001" >
+                    <small>Default: 1</small>
+                </div>
+                <div class="config-item">
+                    <label for="frameInterval">Capture Interval (s)</label>
+                    <input type="number" step="0.001" id="frameInterval" name="frameInterval" value="{{config.get('frameInterval')}}" >
+                    <small>Default: 1</small>
+                </div>
+                <div class="config-item">
+                    <label for="capture_time">Duration of Image Sequence (s)</label>
+                    <input type="number" step="0.001" id="capture_time" name="capture_time" value="{{config.get('capture_time')}}">
+                    <small>Default: 10</small>
+                </div>
+                <div class="config-item">
+                    <label for="site_piv_break">Time between PIV Runs (min)</label>
+                    <input type="text" id="site_piv_break" name="site_piv_break" value="{{config.get('site_piv_break')}}" >
+                </div>
+                <div class="config-item">
+                    <!-- <label for="focal_length">Focal Length (mm)</label> -->
+                    <input type="hidden" step="0.001" id="focal_length" name="focal_length" value="{{config.get('focal_length')}}" readonly style="background-color: #f0f0f0; color: #888;">
+                    <!-- <small>Set in Camera Parameters page</small>  -->
+                </div>
+                
+                <div class="config-item">
+                    <!-- <label for="reduced_res_camera_pixel_size">Camera Pixel Size (mm)</label> -->
+                    <input type="hidden" step="0.001" id="reduced_res_camera_pixel_size" name="reduced_res_camera_pixel_size" value="{{config.get('reduced_res_camera_pixel_size')}}" readonly style="background-color: #f0f0f0; color: #888;">
+                    <!-- <small>Set in Camera Parameters page</small> -->
+                </div>
+                <div class="config-item">
+                    <label for="sensor-height">Sensor Height above Water (m)</label>
+                    <input type="number" step="0.001" id="sensor_height" name="sensor_height" value="{{config.get('sensor_height')}}">
+                    <small>Default: 1</small> 
+                </div>
+                <div class="config-item">
+                    <label for="pixSize">Pixel Size (m) Ground Sampling Distance</label>
+                    <input type="number" id="pixSize" name="pixSize" value="{{config.get('pixSize')}}" readonly style="background-color: #f0f0f0; color: #888;" >
+                    <small>Note:Calculated based on camera parameters and sensor height above water</small>
+                </div>
+                <div class="config-item">
+                    <label for="minvel">Min Velocity (m/s)</label>
+                    <input type="number" step="0.001" id="minvel" name="minvel" value="{{config.get('minvel')}}">
+                    <small>Default: 0.01</small>
+                </div>
+                <div class="config-item">
+                    <label for="maxvel">Max Velocity (m/s) </label>
+                    <input type="number" step="0.001" id="maxvel" name="maxvel" value="{{config.get('maxvel')}}">
+                    <small>Default: 5.0</small>
+                </div>
+                <div class="config-item">
+                    <label for="stdThresh">Standard Deviation Threshold (m/s) </label>
+                    <input type="number" step="0.001" id="stdThresh" name="stdThresh" value="{{config.get('stdThresh')}}">
+                    <small>Default: 4.0</small>
+                </div>
+                <div class="config-item">
+                    <label for="medianFilt">Local Median Threshold (m/s) </label>
+                    <input type="number" step="0.001" id="medianFilt" name="medianFilt" value="{{config.get('medianFilt')}}">
+                    <small>Default: 1.5</small>
+                </div>
+                <div class="config-item">
+                    <label for="infillFlag">Vector Infilling (Y/N)</label>
+                    <select id="infillFlag" name="infillFlag">
+                        <option value="1" {% if config.get('infillFlag') == 1 or config.get('infillFlag') is none %}selected{% endif %}>Yes</option>
+                        <option value="0" {% if config.get('infillFlag') == 0 %}selected{% endif %}>No</option>
+                    </select>
+                    <small>Default: Yes</small>
+                </div>
+                <div class="config-item">
+                    <label for="smoothFlag">Vector Smoothing (Y/N)</label>
+                    <select id="smoothFlag" name="smoothFlag">
+                        <option value="1" {% if config.get('smoothFlag') == 1 or config.get('smoothFlag') is none %}selected{% endif %}>Yes</option>
+                        <option value="0" {% if config.get('smoothFlag') == 0 %}selected{% endif %}>No</option>
+                    </select>
+                    <small>Default: Yes</small>
+                </div>
+                <!-- <div class="config-item">
+                    <label for="enhancement">Enhancement</label>
+                    <select id="enhancement" name="enhancement">
+                        <option value="1" {% if config.get('enhancement') == '1' %}selected{% endif %}>Clahe</option>
+                        <option value="0" {% if config.get('enhancement') == '0' %}selected{% endif %}>Background Subtraction</option>
+                    </select>
+                </div> -->
+              <!--<div class="config-item">
+                    <label for="imu-down">Which IMU Axis is Down</label>
+                    <select id="imu-down" name="imu-down">
+                        <option value="x" {% if config.get('imu-down') == 'x' %}selected{% endif %}>x</option>
+                        <option value="y" {% if config.get('imu-down') == 'y' %}selected{% endif %}>y</option>
+                        <option value="z" {% if config.get('imu-down') == 'z' %}selected{% endif %}>z</option>
+                    </select>
+                </div>
+                <div class="config-item">
+                    <label for="stabilize">Stabilize Images</label>
+                    <select id="stabilize" name="stabilize">
+                        <option value="yes" {% if config.get('stabilize') == "yes" %}selected{% endif %}>Yes</option>
+                        <option value="no" {% if config.get('stabilize') == "no" %}selected{% endif %}>No</option>
+                    </select>
+                </div>
+                <div class="config-item">
+                    <label for="save_images">Save Images</label>
+                    <select id="save_images" name="save_images">
+                        <option value="yes" {% if config.get('save_images') == "yes" %}selected{% endif %}>Yes</option>
+                        <option value="no" {% if config.get('save_images') == "no" %}selected{% endif %}>No</option>
+                    </select>
+                </div>-->
+                <div class="config-item">
+                    <label for="mask">Mask</label>
+                    <select id="mask" name="mask">
+                        <option value="yes" {% if config.get('mask') == "read" %}selected{% endif %}>Yes</option>
+                        <option value="no" {% if config.get('mask') == "no" %}selected{% endif %}>No</option>
+                    </select>
+                </div>
+                <div class=button-container>
+                <button type="submit">Update Configuration</button>
+                </div>
+                <div class="button-container">
+                    <button type="button" onclick="location.href='/piv_parameters_instructions'">Instructions</button>
+                    <button type="button" onclick="location.href='/splash_calib_setup'">Back</button>
+                    <button type="button" onclick="location.href='/splash'">Main Menu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+            // Function to calculate pixel size based on sensor height
+        function calculatePixelSize() {
+            const sensorHeight = parseFloat(document.getElementById('sensor_height').value);
+            const focalLength = parseFloat(document.getElementById('focal_length').value);
+            const cameraPixSize = parseFloat(document.getElementById('reduced_res_camera_pixel_size').value);
+            
+            console.log("Sensor Height:", sensorHeight);
+            console.log("Focal Length:", focalLength);
+            console.log("Camera Pixel Size:", cameraPixSize);
+            if (!isNaN(sensorHeight)) {
+                const pixelSize =(sensorHeight * cameraPixSize)/focalLength; // Example formula
+                document.getElementById('pixSize').value = pixelSize.toFixed(6); // Set the pixel size with 3 decimal points
+            } else {
+                document.getElementById('pixSize').value = ''; // Clear if invalid input
+            }
+        }
+
+    // Add event listener to sensor height field, focal length and reduced res camera pixel size
+    document.getElementById('sensor_height').addEventListener('input', calculatePixelSize);
+
+        document.getElementById('configForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+    
+            const formData = new FormData(event.target);
+            const data = {};
+    
+            // Read all form data
+            formData.forEach((value, key) => {
+                data[key] = value;
+            });
+    
+            // Convert string values to numbers where necessary
+            data['infillFlag'] = Number(data['infillFlag']);
+            data['smoothFlag'] = Number(data['smoothFlag']);
+    
+            // Send the data to the server via a POST request
+            fetch('/save_config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.message) {
+                    alert('Configuration saved successfully!');
+                } else if (result.error) {
+                    alert('Error: ' + result.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</body>
+</html>

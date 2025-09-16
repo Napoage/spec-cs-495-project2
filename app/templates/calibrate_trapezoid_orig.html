@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Trapezoid Adjustment</title>
+
+    <!-- Bootstrap for responsive layout and styling -->
+    <!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">-->
+    <link rel="stylesheet" href="../static/bootstrap/bootstrap.min.css">
+    
+    <style>
+        @font-face {
+            font-family: 'Bebas Neue';
+            src: url('{{ url_for("static", filename="font/BebasNeue-Regular.ttf") }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        html{
+            font-family: 'Bebas Neue'
+        }
+        body{
+            font-family: 'Bebas Neue'
+        }
+        .banner {
+            background-color: #ffcc00;
+            color: #333;
+            text-align: center;
+            width: 100%;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 1.2em;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Bebas Neue';
+            src: url('{{ url_for("static", filename="font/BebasNeue-Regular.ttf") }}') format('truetype');
+
+        }
+        
+
+        img#video_feed {
+            max-width: 100%;
+            height: auto;
+            border: 2px solid black;
+            display: block;
+            margin: 0 auto; /* Centering the image*/
+        }
+
+        /* For phones: max width 100% */
+        @media screen and (max-width: 599px) {
+            img#video_feed{
+                max-width: 100%;
+            }
+        }
+
+        /* For tablets: max width 75% and center feed */
+        @media screen and (min-width: 600px) and (max-width: 1024px)  {
+            img#video_feed{
+                max-width: 75%;
+                margin-left: auto;
+                margin-right: auto;
+            }
+        }
+
+        /* For laptops: max width 50% and center feed */
+        @media screen and (min-width: 1025px) {
+            img#video_feed{
+                max-width: 50%;
+                margin-left: auto;
+                margin-right: auto;
+            }
+        }
+
+        .controls {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+
+        .button-group {
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .button-group button {
+            margin: 5px;
+            padding: 10px;
+            font-family: 'Bebas Neue';
+            font-size: 18px;
+            background-color: #000;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .button-group button {
+                font-size: 18px;
+                padding: 8px;
+            }
+        }
+
+        .instructions {
+            margin-top: 30px;
+            font-family: Arial, Helvetica, sans-serif;
+            
+        }
+
+        .instructions h2 {
+            margin-top: 0;
+            text-align: center;
+            
+
+        }
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            width: 80%;
+            max-width: 300px;
+        }
+        
+        button {
+            background-color: #000;
+            color: white;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 30px;
+            font-family: 'Bebas Neue', sans-serif;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        /* Responsive Design */
+        @media (min-width: 600px) {
+            .button-container {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+            button {
+                width: 20%;
+                margin: 10px 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    {% if g.process_running %}
+        <div class="banner">PIV Process is running</div>
+    {% endif %}
+    <div class="container">
+
+        <h1 class="text-center">Interactive Trapezoid Adjustment</h1>
+
+        <div class="text-center">
+            <img src="/process_trapezoid" alt="Video feed" id="video_feed">
+        </div>
+
+        <div class="controls">
+            <h3>Move Points</h3>
+
+            <div class="button-group">
+                <h4>Top Left</h4>
+                <button class="btn btn-primary" onclick="movePoint('top_left', 'up')">Up</button>
+                <button class="btn btn-secondary" onclick="movePoint('top_left', 'down')">Down</button>
+                <button class="btn btn-secondary" onclick="movePoint('top_left', 'left')">Left</button>
+                <button class="btn btn-secondary" onclick="movePoint('top_left', 'right')">Right</button>
+            </div>
+
+            <div class="button-group">
+                <h4>Top Right</h4>
+                <button class="btn btn-secondary" onclick="movePoint('top_right', 'left')">Left</button>
+                <button class="btn btn-secondary" onclick="movePoint('top_right', 'right')">Right</button>
+            </div>
+
+            <div class="button-group">
+                <h4>Bottom Left</h4>
+                <button class="btn btn-primary" onclick="movePoint('bottom_left', 'up')">Up</button>
+                <button class="btn btn-secondary" onclick="movePoint('bottom_left', 'down')">Down</button>
+            </div>
+
+            <!-- New Show Transformed Image Button -->
+            <div class="button-group">
+                <h4>Show Transformed Image</h4>
+                <button class="btn btn-warning" onclick="transformed()">Show Transformed Image</button>
+            </div>
+
+            <!-- New Save Button -->
+            <div class="button-group">
+                <h4>Save Current Points</h4>
+                <button class="btn btn-success" onclick="savePoints()">Save Points</button>
+            </div>
+        </div>
+        <!-- Placeholder for the transformed image -->
+        <div id="transformed-image-container" class="text-center" style="margin-top: 20px;">
+            <img id="transformed-image" src="" alt="Transformed Image" style="display:none; max-width: 100%; height: auto; border: 2px solid black;">
+        </div>
+        <div class="button-group">
+            <button class = "btn btn-primary" onclick="location.href='/calibrate_piv_parameters'">Next Step</button>
+        </div>
+        <!-- Instructions Section -->
+        <div class="instructions">
+            <h2>Calibration Instructions</h2>
+
+            <h3>Positioning the Trapezoid:</h3>
+            <p>Move the trapezoid to cover the area of the river from which you wish to obtain velocity measurements. Only this area will be measured. Aim to maximize its size, covering as much of the river as possible while ensuring that the entire trapezoid remains within the camera frame. Experiment with different camera angles and trapezoid placements to capture the desired area for velocity measurement.</p>
+
+            <h3>Finalizing the Setup:</h3>
+            <p>Once you have positioned the trapezoid as desired, securely tighten the camera. Continue to monitor the trapezoid's position during this process and make any necessary adjustments. After finalizing the camera angle and trapezoid position, click "Save" to lock in your settings.</p>
+
+            <h3>Instructions for Adjusting the Trapezoid:</h3>
+            <ul>
+                <li><strong>Moving the Trapezoid:</strong> Adjust the top points to shift the trapezoid left or right, altering its width and X position. Modify the bottom left point to change the trapezoid's height and Y position.</li>
+                <li><strong>Tilting the Camera:</strong> Tilting the camera upward will cause the angles of the trapezoid to widen, while tilting it downward will make the angles narrower.</li>
+            </ul>
+        </div>
+
+    </div>
+
+    <!-- Bootstrap JS and dependencies for button interactivity -->
+    <!--<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>-->
+
+    <script src="{{ url_for('static', filename='bootstrap/jquery-3.5.1.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='bootstrap/popper.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='bootstrap/bootstrap.min.js') }}"></script>
+    
+
+    <script>
+        function movePoint(point, direction) {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `/move_point?point=${point}&direction=${direction}`, true);
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                console.log(`Moved ${point} ${direction}`);
+                // Refresh the video feed to show updated trapezoid
+                document.getElementById('video_feed').src = '/process_trapezoid?' + new Date().getTime(); // Add a cache-buster
+            } else {
+                console.error('Error moving point:', xhr.responseText);
+            }
+        };
+        xhr.onerror = function () {
+            console.error('Request failed');
+        };
+        xhr.send();
+    }
+
+        function savePoints() {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/save_points', true);
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    alert('SPEC: Points saved successfully!');
+                } else {
+                    alert('Error saving points: ' + xhr.responseText);
+                }
+            };
+            xhr.send();
+        }
+        function transformed() {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', '/transformed_image', true); // Request the transformed image from the server
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    // Generate a unique URL by appending a timestamp to prevent caching
+                    const transformedImage = document.getElementById('transformed-image');
+                    const uniqueUrl = '/static/mask/captured_frame.jpg?' + new Date().getTime(); // Add timestamp
+                    transformedImage.src = uniqueUrl;
+                    transformedImage.style.display = 'block'; // Show the image
+                } else {
+                    console.error('Error fetching transformed image:', xhr.responseText);
+                }
+            };
+            xhr.onerror = function () {
+                console.error('Request failed');
+            };
+            xhr.send();
+        }
+    </script>
+</body>
+</html>

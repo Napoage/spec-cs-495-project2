@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+    <link rel="preload" href="{{ url_for('static', filename='font/BebasNeue-Regular.ttf') }}" as="font" type="font/ttf" crossorigin="anonymous">    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digitize Mask</title>
+    <style>
+        @font-face {
+            font-family: 'Bebas Neue';
+            src: url('{{ url_for("static", filename="font/BebasNeue-Regular.ttf") }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Bebas Neue', sans-serif;
+        }
+        body {
+            align-items: center;
+            justify-content: flex-start;
+            background-color: #f0f0f0;
+            padding: 10px; /* Added padding for mobile */
+            padding-top: 60px;
+            background-color: #f0f0f0;
+            background-image: url("{{ url_for('static', filename='images/app_bg.jpg') }}");
+            background-size: cover;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+        }
+        .banner {
+            background-color: #ffcc00;
+            color: #333;
+            text-align: center;
+            width: 100%;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 1.2em;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo {
+            width: 80%;
+            max-width: 300px;
+            height: auto;
+            margin-bottom: -20px;
+            margin-left: 20px;
+        }
+        .logo {
+            width: 80%; /* Use 80% of the available width */
+            max-width: 300px; /* Maximum width of 300px */
+            height: auto; /* Maintain aspect ratio */
+            margin: 0 auto 20px; /* Center the logo and add bottom margin */
+            display: flex; /* Use flex to center the logo */
+            justify-content: center; /* Center horizontally */
+        }
+        #imageCanvas {
+            border: 1px solid black;
+            width: 100%; /* Make canvas responsive */
+            max-width: 100%; /* Ensure it doesn't exceed screen width */
+            height: auto; /* Maintain aspect ratio */
+            margin-bottom: 20px;
+        }
+
+        button {
+            background-color: #000;
+            color: white;
+            padding: 12px; /* Adjusted padding for better touch target */
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 24px; /* Adjusted font size */
+            font-family: 'Bebas Neue', sans-serif;
+            text-align: center;
+            width: 100%; /* Full-width buttons */
+            max-width: 300px; /* Limit button width */
+            transition: background-color 0.3s;
+        }
+        .button-container {
+            display: flex;
+            width: 100%;
+            max-width: 500px; /* Adjust as needed */
+            margin: 0 auto;
+            gap: 10px; /* Space between buttons */
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .highlighted-title {
+            display: inline-block; /* Ensures the background only covers the text */
+            background-color: white; /* Rectangle color */
+            color: black; /* Text color */
+            padding: 10px 20px; /* Padding to create space around the text */
+            border-radius: 5px; /* Optional: Rounds the corners */
+            font-family: 'Bebas Neue', sans-serif; /* Font styling */
+            font-size: 32px; /* Adjust font size as needed */
+            text-align: center; /* Center text if it spans multiple lines */
+            width: 50%;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .highlighted-subtitle {
+            display: inline-block; /* Ensures the background only covers the text */
+            background-color: white; /* Rectangle color */
+            color: black; /* Text color */
+            padding: 10px 20px; /* Padding to create space around the text */
+            border-radius: 5px; /* Optional: Rounds the corners */
+            font-family: 'Bebas Neue', sans-serif; /* Font styling */
+            font-size: 20px; /* Adjust font size as needed */
+            text-align: center; /* Center text if it spans multiple lines */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+    </style>
+</head>
+<body>
+    {% if g.process_running %}
+        <div class="banner">PIV Process is running</div>
+    {% endif %}
+    <div class="container"></div>
+
+    <h1 class="highlighted-title">Digitize Mask</h1>
+    <h3 class="highlighted-subtitle" style="text-align: center;">To create a mask, start clicking points to form a polygon from the top right and proceed counterclockwise</h3>
+    <canvas id="imageCanvas"></canvas>
+
+    <button id="submitPoints">Submit Points</button>
+    <div class="button-container">    
+        <button onclick="location.href='/digitize_mask'">Reset Points</button>
+        <button onclick="history.back()">Back</button>
+        <button onclick="location.href='/splash'" type="button" style="margin-top: 10px">Main Menu</button>
+    </div>
+
+
+    <script>
+        let points = [];
+
+        const img = new Image();
+        img.src = "{{ image_path }}";
+        img.onload = function() {
+            const canvas = document.getElementById('imageCanvas');
+            const ctx = canvas.getContext('2d');
+
+            // Set original canvas size
+            canvas.width = img.width;
+            canvas.height = img.height;
+
+            // Draw image to the canvas
+            ctx.drawImage(img, 0, 0);
+
+            // Resize the canvas for display
+            const aspectRatio = img.width / img.height;
+            const displayWidth = window.innerWidth * 0.9; // Use 90% of viewport width
+            const displayHeight = displayWidth / aspectRatio; // Maintain aspect ratio
+            canvas.style.width = displayWidth + 'px';
+            canvas.style.height = displayHeight + 'px';
+
+            canvas.addEventListener('click', function(event) {
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = img.width / displayWidth; // Calculate scaling factor
+                const scaleY = img.height / displayHeight; // Calculate scaling factor
+                const x = (event.clientX - rect.left) * scaleX; // Adjust coordinates based on scaling
+                const y = (event.clientY - rect.top) * scaleY; // Adjust coordinates based on scaling
+
+                points.push([x, y]);
+
+                ctx.fillStyle = "#00FF00";
+                ctx.beginPath();
+                ctx.arc(x, y, 20, 0, Math.PI * 2); //size of dot
+                ctx.fill();
+            });
+        };
+
+
+        document.getElementById('submitPoints').addEventListener('click', function() {
+            fetch('/digitize_mask', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ points: points }),
+            })
+            .then(response => {
+                if (response.redirected) {
+                    // If the response indicates a redirect, go to that URL
+                    window.location.href = response.url;
+                } else {
+                    return response.json();
+                }
+            })
+            .then(data => {
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+
+    </script>
+
+</body>
+</html>

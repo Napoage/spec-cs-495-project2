@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preload" href="{{ url_for('static', filename='font/BebasNeue-Regular.ttf') }}" as="font" type="font/ttf" crossorigin="anonymous">
+    <title>Masking Options</title>
+    <style>
+        @font-face {
+            font-family: 'Bebas Neue';
+            src: url('{{ url_for("static", filename="font/BebasNeue-Regular.ttf") }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #f0f0f0;
+            background-image: url("{{ url_for('static', filename='images/app_bg.jpg') }}");
+            background-size: cover;
+            background-attachment: fixed;
+        }
+        
+        h1, h2, h3, p{
+            font-family: 'Bebas Neue';
+        }
+        .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo {
+            width: 80%;
+            max-width: 400px;
+            height: auto;
+            margin-bottom: 20px;
+            margin-left: 20px;
+        }
+
+        .button-container {
+            display: flex;
+            width: 100%;
+            max-width: 500px; /* Adjust as needed */
+            margin: 0 auto;
+            gap: 10px; /* Space between buttons */
+        }
+
+        .button-container button,
+        .button-container form {
+            flex: 1; /* Ensure equal width for both containers */
+        }
+        .banner {
+            background-color: #ffcc00;
+            font-family: 'Bebas Neue';
+            color: #333;
+            text-align: center;
+            width: 100%;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 1.2em;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+        }
+
+
+        .button-container form {
+            display: flex; /* Allow the button inside to stretch */
+        }
+
+        .button-container button,
+        .button-container form button {
+            width: 100%; /* Ensure each button fills its container */
+            padding: 15px;
+            font-size: 30px; /* Consistent font size */
+            font-family: 'Bebas Neue', sans-serif;
+            cursor: pointer;
+            background-color: #000;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .button-container button:hover,
+        .button-container form button:hover {
+            background-color: #4571a0;
+        }
+        .highlighted-title {
+            display: inline-block; /* Ensures the background only covers the text */
+            background-color: white; /* Rectangle color */
+            color: black; /* Text color */
+            padding: 10px 20px; /* Padding to create space around the text */
+            border-radius: 5px; /* Optional: Rounds the corners */
+            font-family: 'Bebas Neue', sans-serif; /* Font styling */
+            font-size: 24px; /* Adjust font size as needed */
+            text-align: center; /* Center text if it spans multiple lines */
+        }
+
+    </style>
+</head>
+<body>
+    {% if g.process_running %}
+        <div class="banner">PIV Process is running</div>
+    {% endif %}
+    <div class="container"></div>
+        <div class="logo-container">
+            <img src="{{ url_for('static', filename='images/SPEC_logo.png') }}" class="logo" alt="Logo">
+        </div>
+    </div>
+    <h2 class="highlighted-title">Generate Mask: Program creates the mask automatically <br>
+        Digitize Mask: Select points to create custom mask</h2>
+
+    <div class="button-container">
+        <button onclick="location.href='/digitize_mask'" type="button">Digitize Mask</button>
+        <form action="/generate_mask" method="POST" style="display: inline;">
+            <button type="submit">Generate Mask</button>
+        </form>
+    </div>
+    <div class="button-container">
+        <button onclick="location.href='/masking_instructions'">Instructions</button>
+    </div>
+    <div class="button-container">
+        <button onclick="history.back()">Back</button>
+        <button onclick="location.href='/splash'" type="button" style="margin-top: 10px">Main Menu</button>
+    </div>
+
+
+</body>
+</html>

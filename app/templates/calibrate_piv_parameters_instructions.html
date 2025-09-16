@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIV Parameters</title>
+    <style>
+        @font-face {
+            font-family: 'Bebas Neue';
+            src: url('{{ url_for("static", filename="font/BebasNeue-Regular.ttf") }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            font-family: 'Bebas Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh; 
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            background-image: url("{{ url_for('static', filename='images/app_bg.jpg') }}");
+            background-size: cover;
+            background-attachment: fixed;
+        }
+
+        .banner {
+            background-color: #ffcc00;
+            color: #333;
+            text-align: center;
+            width: 100%;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 1.2em;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+        }
+        .spacer {
+            height: 60px;
+            width: 100%;
+        }
+        p {
+            font-size: 16px;
+            /*line-height: 1.6;*/
+            margin: 10px 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        ul {
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        .text-box {
+            background-color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            width: 90%;
+            max-width: 800px;
+            margin: 20px auto;
+            text-align: left;
+            line-height: 1.5;
+            color: #333;
+        }
+        .text-box h1 {
+            text-align: center;
+        }
+        .text-box img { 
+            max-width: 100%;
+            height: auto; 
+            margin: 20px auto; /* This centers the image horizontally */ 
+            display: block; /* Ensures the image occupies its own line */
+         }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 16px;
+
+        }
+        th, td {
+            padding: 12px;
+            text-align: center;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            width: 90%;
+            max-width: 800px;
+        }
+        button {
+            background-color: #000;
+            color: white;
+            padding: 15px 30px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            font-family: 'Bebas Neue', sans-serif;
+            text-align: center;
+            transition: background-color 0.3s;
+            flex: 1;
+        }
+        button:hover {
+            background-color: #4571a0;
+        }
+        button + button {
+            margin-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    {% if g.process_running %}
+        <div class="banner">PIV Process is running</div>
+    {% endif %}
+    <div class="spacer"></div>
+    <div class="text-box">
+        <h1>PIV Parameters</h1>
+        <p>
+            The PIV PARAMETERS page is used to input all the parameters needed for your specific PIV situation.
+            These parameters influence the PIV outputs and should be adjusted carefully. The first five
+            parameters in the Table are the most important and require special attention.
+        </p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Desired Output Vector Spacing (m)</td>
+                    <td>This is the spacing the user wants between vectors in the PIV outputs, this variable affects the output a lot and is key for setting 
+                        up the system. E.g. input of 1 refers to 1 meter output spacing. </td>
+                </tr>
+                <tr>
+                    <td>Capture Interval (s)</td>
+                    <td>Time between each image capture (e.g., 10 frames per second = 0.1s).</td>
+                </tr>
+                <tr>
+                    <td>Duration of Image Sequence (s)</td>
+                    <td>This is the time you want to capture images for each PIV run.</td>
+                </tr>
+                <tr>
+                    <td>Time between PIV Runs (min)</td>
+                    <td>This is the time the system waits between PIV runs.</td>
+                </tr>
+                <tr>
+                    <td>Sensor Height Above Water (m)</td>
+                    <td>Height in meters from the camera to the water surface.</td>
+                </tr>
+                <tr>
+                    <td>Pixel Size Ground Sampling Distance (m)</td>
+                    <td>This is calculated based on sensor height. Represents the ground sampling distance of the camera.</td>
+                </tr>
+                <tr>
+                    <td>Min Velocity (m/s)</td>
+                    <td>This is the minimum velocity allowed in PIV outputs. Lower values are filtered out.</td>
+                </tr>
+                <tr>
+                    <td>Max Velocity (m/s)</td>
+                    <td>This is the maximum velocity allowed in PIV outputs. Higher values are filtered out.</td>
+                </tr>
+                <tr>
+                    <td>Standard Deviation Threshold</td>
+                    <td>This is th maximum standard deviation allowed between PIV outputs to filter outliers.</td>
+                </tr>
+                <tr>
+                    <td>Local Median Threshold (m/s)</td>
+                    <td>This is the local median value used to filter outliers in PIV outputs.</td>
+                </tr>
+                <tr>
+                    <td>Vector Infilling</td>
+                    <td>Yes: Fill missing vectors. No: Do not fill missing vectors.</td>
+                </tr>
+                <tr>
+                    <td>Vector Smoothing</td>
+                    <td>Yes: Smooth vector field. No: Do not smooth vector field.</td>
+                </tr>
+                <tr>
+                    <td>Mask</td>
+                    <td>Yes: Use a mask (recommended). No: Do not use a mask.</td>
+                </tr>
+            </tbody>
+        </table>
+        <p>
+            For the most part, parameters that come after <strong>Pixel Sixe Ground Sampling Distance</strong> in the table
+            can be left at the default values. However, the <strong>Desired Output Vector Spacing</strong> and <strong>Capture Interval</strong>
+            are important parameters and if after running a test, you are not satisfied with the results,
+            think about adjusting these parameters to assist in collecting good data. There are times that the output spacing is too large or small 
+            for a particle to be properly tracked and thus no output is produced. Similarly, the capture interval must allow enough time for features to move a
+            measurable distance (i.e., number of pixels between frames).
+            <br>
+            <br>
+            <br>
+            Adjust the parameters as needed. Once satisfied, click <strong>UPDATE CONFIGURATION</strong> to save your settings. 
+            Then press <strong>NEXT STEP</strong> to proceed.
+        </p>
+    </div>
+    <div class="button-container">
+        <button onclick="location.href='/calibrate_piv_parameters'">Configure PIV Parameters</button>
+        <button onclick="location.href='/splash'">Main Menu</button>
+    </div>
+</body>
+</html>

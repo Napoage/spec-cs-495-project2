@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>File Explorer</title>
+</head>
+<body>
+    <h2>File Explorer</h2>
+    <h3>Path: /{{ path }}</h3>
+    <ul>
+        {% if path %}
+            <li><a href="{{ url_for('file_explorer', path='/'.join(path.split('/')[:-1])) }}">.. (Parent)</a></li>
+        {% endif %}
+        {% for item in items %}
+            <li>
+                {% if item.type == 'Directory' %}
+                    <a href="{{ url_for('file_explorer', path=item.path) }}">{{ item.name }}/</a>
+                {% else %}
+                    <a href="{{ url_for('file_explorer', path=item.path) }}">{{ item.name }}</a>
+                {% endif %}
+                ({{ item.type }}, {{ item.size }} bytes)
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

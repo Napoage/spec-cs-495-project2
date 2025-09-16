@@ -1,0 +1,34 @@
+<!-- waiting_for_device.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waiting for Device</title>
+    <script>
+        function checkStatus() {
+            fetch('/check_device_status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'free') {
+                        // Redirect to the splash page if the device is free
+                        window.location.href = "/splash";
+                    } else {
+                        // Update the status message if the device is still busy
+                        document.getElementById("status").innerText = "Device is busy. Waiting...";
+                        setTimeout(checkStatus, 2000);  // Poll every 2 seconds
+                    }
+                });
+        }
+
+        // Start checking the device status once the page loads
+        window.onload = function() {
+            checkStatus();
+        };
+    </script>
+</head>
+<body>
+    <h1>Canceling PIV Process</h1>
+    <p id="status"> Waiting for the PIV process to terminate...</p>
+</body>
+</html>

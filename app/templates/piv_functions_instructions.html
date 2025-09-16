@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIV Functions Instructions</title>
+    <style>
+        @font-face {
+            font-family: 'Bebas Neue';
+            src: url('{{ url_for("static", filename="font/BebasNeue-Regular.ttf") }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            font-family: 'Bebas Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            background-image: url("{{ url_for('static', filename='images/app_bg.jpg') }}");
+            background-size: cover;
+            background-attachment: fixed;
+        }
+        .content-box {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            max-width: 800px;
+            width: 90%;
+            margin: 20px;
+            padding: 20px;
+            text-align: left;
+        }
+        .content-box img {
+            max-width: 60%;
+            height: auto;
+            display: block;
+            margin: 10px auto; /* Center the image horizontally */
+        }
+        h1, h2 {
+            color: #333;
+            text-align: center;
+        }
+        p {
+            font-size: 16px;
+            margin: 10px 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        ul {
+            font-size: 16px;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        .image-placeholder {
+            width: 100%;
+            height: 200px;
+            background-color: #ddd;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            color: #666;
+            border: 2px dashed #bbb;
+        }
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #000;
+            color: white;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.2em;
+            font-family: 'Bebas Neue', sans-serif;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #4571a0;
+        }
+    </style>
+</head>
+<body>
+    <div class="content-box">
+        <h1>PIV Functions Instructions</h1>
+        <p>
+           The PIV FUNCTIONS page is where you can view PIV results, run tests, or finally run the ain continuous PIV function. Below are the functions available on this page:
+        </p>
+        
+        <h2>Run Tests</h2>
+        <p>
+            This button performs a single PIV calculation based on the selected parameters. 
+            This is useful for previewing how PIV outputs will look for the current system configuration. 
+        </p>
+        <ul>
+            <li>Each test generates a new folder of data, enabling comparison between test results.</li>
+            <li>During the test, you will be directed to a waiting screen that provides live updates on the 
+                calculation process.</li>
+            <li>After completion, you will be redirected to the results page to view the most recent test files.</li>
+        </ul>
+        <img src="{{ url_for('static', filename='images/run_test.jpg') }}" alt="Run test">
+        
+
+        <h2>Run PIV</h2>
+        <p>
+            This button is used for continuous PIV calculations over a long period. 
+            Ensure all parameters are configured correctly before starting. 
+        </p>
+        <ul>
+            <li>A verification page will appear, asking you to confirm and manage test files to optimize disk space.</li>
+            <li>You can choose to save test files to a USB or delete them entirely to free up space.</li>
+            <li>The system will estimate how long it can run before disk space is full, based on the size of the last test file.</li>
+            <li>Once PIV starts, a yellow banner will appear across all pages indicating that PIV is running.</li>
+        </ul>
+        <p>
+            After starting, you will be redirected to a page to view results or return to the main menu.
+        </p>
+        <!--<div class="image-placeholder">DISPLAY IMAGE</div>-->
+
+        <h2>Results</h2>
+        <p>
+            The Results page allows you to view data stored in the <strong>save_data</strong> folder. By default, it displays the most recent PIV calculation. 
+        </p>
+        <ul>
+            <li>Data is organized by configuration date and run date.</li>
+            <li>Test files include "test" in their filenames and contain a single run.</li>
+            <li>Main PIV configurations may include multiple runs with selectable dates.</li>
+        </ul>
+        <img src="{{ url_for('static', filename='images/results_config_run.jpg') }}" alt="Results Config Run">
+        <p>
+            You can select the output type and display options:
+        </p>
+        <ul>
+            <li><strong>Overlay Type</strong>: Choose between vectors displayed over the river image or over the magnitude graph of the vectors.</li>
+            <li><strong>Unit Type</strong>: Select between meters per second or feet per second.</li>
+        </ul>
+        <p>
+            Once you configure these options, click <strong>Generate Graph</strong> to display the results. This process may take a few seconds.
+        </p>
+        <img src="{{ url_for('static', filename='images/results_graph.jpg') }}" alt="Results Graph">
+        <p>
+            To view the actual numeric values of the output PIV vectors, select the desired components, and the CSV file will be displayed below the graph.
+        </p>
+        <img src="{{ url_for('static', filename='images/results_csv.jpg') }}" alt="Results CSV">
+
+        <div class="button-container">
+            <button onclick="location.href='/splash_piv'">Back</button>
+        </div>
+    </div>
+</body>
+</html>

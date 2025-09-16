@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main Menu</title>
+    <style>
+        @font-face {
+            font-family: 'Bebas Neue';
+            src: url('{{ url_for("static", filename="font/BebasNeue-Regular.ttf") }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            font-family: 'Bebas Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh; 
+            margin: 0;
+            margin-top: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            background-image: url("{{ url_for('static', filename='images/app_bg.jpg') }}");
+            background-size: cover;
+            background-attachment: fixed;
+        }
+                /* Banner Style */
+        .banner {
+            background-color: #ffcc00;
+            color: #333;
+            text-align: center;
+            width: 100%;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 1.2em;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+        }
+        .spacer {
+            height: 60px; /* Match the height of the banner */
+            width: 100%;
+        }
+        .content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            padding-top: 20px;
+            box-sizing: border-box;
+        }
+
+        .logo {
+            width: 80%;
+            max-width: 300px;
+            height: auto;
+            margin-bottom: 20px;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            width: 80%;
+            max-width: 300px;
+            margin-bottom: 0px;
+        }
+        button {
+            background-color: #000;
+            color: white;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 30px;
+            font-family: 'Bebas Neue', sans-serif;
+            text-align: center;
+            transition: background-color 0.3s;
+            
+        }
+        button:hover {
+            background-color: #4571a0;
+        }
+
+        /* Responsive Design */
+        @media (min-width: 600px) {
+            .button-container {
+                flex-direction: row;
+                justify-content: center;
+                max-width: 600px; /* Wider container on larger screens */
+            }
+            button {
+                width: 48%; /* Two buttons per row */
+                margin: 10px 1%;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .logo img {
+                margin-top: 0px; /* Add top margin for the logo in mobile view */
+            }
+        }
+
+        @media (min-width: 900px) {
+            body {
+                max-width: 2000px; /* Limit width of content on larger screens */
+            }
+            .button-container {
+                flex-direction: row; /* Arrange buttons in rows */
+                flex-wrap: wrap; /* Allow wrapping to the next line if needed */
+                justify-content: center; /* Distribute space evenly */
+                max-width: 100%; /* Allow wider container for buttons */
+            }
+            button {
+                font-size: 20px; /* Adjust font size for larger screens */
+                flex: 1 1 30%; /* Buttons take 30% of the container's width */
+                margin: 10px; /* Add margin between buttons */
+                max-width: 200px; /* Optional: limit maximum button width */
+            }
+        }
+        .highlighted-title {
+            display: inline-block; /* Ensures the background only covers the text */
+            background-color: white; /* Rectangle color */
+            color: rgb(245, 7, 7); /* Text color */
+            padding: 10px 20px; /* Padding to create space around the text */
+            border-radius: 5px; /* Optional: Rounds the corners */
+            font-family: 'Bebas Neue', sans-serif; /* Font styling */
+            font-size: 24px; /* Adjust font size as needed */
+            text-align: center; /* Center text if it spans multiple lines */
+        }
+    </style>
+</head>
+<body>
+    {% if g.process_running %}
+        <div class="banner">PIV Process is running</div>
+    {% endif %}
+    <div class="spacer"></div>
+    <div class="logo">
+        <img src="{{ url_for('static', filename='images/SPEC_logo.png') }}" alt="Logo" style="width: 120%; height: auto; border-radius: 10px; ">
+    </div>
+    <div class="content">
+        {% if error %}
+            <div class="highlighted-title">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        <div class="button-container">
+            <!--Utilities-->
+            <button onclick="location.href='/splash_utilities'">Utilities</button>
+
+            <!--Calibrations and Setup-->
+            <button onclick="location.href='/splash_calib_setup'">Setup and Calibrations</button>
+
+            <!--PIV-->
+            <button onclick="location.href='/splash_piv'">PIV functions</button>
+
+            <!--Logout-->
+            <button onclick="location.href='/logout'">Logout</button>
+            <button onclick="location.href='/main_splash_instructions'">Instructions</button>
+
+        </div>
+        <div class="logo">
+            <img src="{{ url_for('static', filename='images/DA_logo.jpg') }}" alt="Logo" style="width: 40%; height: auto;">
+        </div>
+    </div>
+    <script>
+        function cancelPIV() {
+            fetch('/cancel_piv', {
+                method: 'POST' // Sends a POST request to the /cancel_piv route
+            })
+            .then(response => response.json()) // Parse the JSON response from the server
+            .then(data => {
+                alert(data.message); // Show success message from the server
+                window.location.reload(); // Reload the page after cancellation
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while cancelling PIV.'); // Show an error message if the request fails
+            });
+        }  
+        // Function to handle saving data to USB without navigation
+        function saveToUSB() {
+            fetch('/save_to_usb', {
+                method: 'POST' // Adjust based on the route method configuration
+            })
+            .then(response => response.json()) // Assuming the server returns JSON
+            .then(data => {
+                // Handle success or error message from the server response
+                if (data.status_code === 200) {
+                    alert(data.message); // Show success message
+                } else {
+                    alert('Error: ' + data.message); // Show error message if status code is not 200
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while saving to USB.');
+            });
+        }
+    </script>
+</body>
+</html>
+

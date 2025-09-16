@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preload" href="{{ url_for('static', filename='font/BebasNeue-Regular.ttf') }}" as="font" type="font/ttf" crossorigin="anonymous">
+    <title>Processing Logs</title>
+    <!-- <meta http-equiv="refresh" content="0;url=/run_test_script"> -->
+    <style>
+        @font-face {
+            font-family: 'Bebas Neue';
+            src: url('{{ url_for("static", filename="font/BebasNeue-Regular.ttf") }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            font-family: 'Bebas Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh; /* Full viewport height */
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            background-image: url("{{ url_for('static', filename='images/app_bg.jpg') }}");
+            background-size: cover;
+            background-attachment: fixed;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #log-line {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-top: 20px;
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 15px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+    </style>
+</head>
+<body>
+    <div>
+        <div class="spinner"></div>
+        <div id="log-line">Waiting for updates...</div>
+    </div>
+
+    <script>
+            const logLineElement = document.getElementById('log-line');
+
+            // Function to restart the EventSource connection
+            function startLogStream() {
+                // Close any existing EventSource connection
+                if (window.eventSource) {
+                    window.eventSource.close();
+                }
+
+                // Create a new EventSource connection
+                window.eventSource = new EventSource('/stream_saving_to_usb');
+
+                // Listen for incoming log updates
+                window.eventSource.onmessage = function(event) {
+                    logLineElement.textContent = event.data; // Update the log line
+                };
+
+                // Handle connection errors
+                window.eventSource.onerror = function() {
+                    logLineElement.textContent = "Error: Unable to fetch log updates.";
+                    logLineElement.style.color = "red";
+                    window.eventSource.close();
+                };
+            }
+
+            // Start the log stream
+            startLogStream();
+                    // Trigger the script execution after the page loads
+            setTimeout(function() {
+                fetch("/save_to_usb")
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(data => { throw new Error(data.error || "An unknown error occurred"); });
+                        }
+                        return response.json(); // Parse JSON if success
+                    })
+                    .then(data => {
+                        // Handle success
+                        if (data.message) {
+                            // Show success message
+                            logLineElement.textContent = data.message;
+                            logLineElement.style.color = "green";
+
+                            // Redirect to success page after 2 seconds
+                            setTimeout(function() {
+                                window.location.href = "/save_success?dir_list=" + encodeURIComponent(JSON.stringify(data.dir_list)) + "&new_directory=" + encodeURIComponent(data.new_directory);
+                            }, 2000);
+                        }
+                    })
+                    .catch(error => {
+                        // Show error
+                        alert(error.message); // Show error as a pop-up instead of redirecting
+                        logLineElement.textContent = "Error: " + error.message;
+                        logLineElement.style.color = "red";
+
+                        // Go back after 2 seconds
+                        setTimeout(function() {
+                            window.history.back();
+                        }, 2000);
+                    });
+            }, 1000);
+            //     window.location.href = "/save_to_usb";  // Trigger the save_to_usb actions after 1 second
+            // }, 1000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preload" href="{{ url_for('static', filename='font/BebasNeue-Regular.ttf') }}" as="font" type="font/ttf" crossorigin="anonymous">
+    <title>Logs</title>
+    <style>
+        @font-face {
+            font-family: 'Bebas Neue';
+            src: url('{{ url_for("static", filename="font/BebasNeue-Regular.ttf") }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            font-family: 'Bebas Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh; 
+            margin: 0;
+            margin-top: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            background-image: url("{{ url_for('static', filename='images/app_bg.jpg') }}");
+            background-size: cover;
+            background-attachment: fixed;
+        }
+                /* Banner Style */
+        .banner {
+            background-color: #ffcc00;
+            color: #333;
+            text-align: center;
+            width: 100%;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 1.2em;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+        }
+        .spacer {
+            height: 60px; /* Match the height of the banner */
+            width: 100%;
+        }
+        .content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            padding-top: 20px;
+            box-sizing: border-box;
+        }
+
+        .logo {
+            width: 80%;
+            max-width: 300px;
+            height: auto;
+            margin-bottom: 20px;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            width: 80%;
+            max-width: 300px;
+            margin-bottom: 0px;
+        }
+        button {
+            background-color: #000;
+            color: white;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 30px;
+            font-family: 'Bebas Neue', sans-serif;
+            text-align: center;
+            transition: background-color 0.3s;
+            
+        }
+        button:hover {
+            background-color: #4571a0;
+        }
+        .highlighted-title {
+            display: inline-block; /* Ensures the background only covers the text */
+            background-color: white; /* Rectangle color */
+            color: black; /* Text color */
+            padding: 10px 20px; /* Padding to create space around the text */
+            border-radius: 5px; /* Optional: Rounds the corners */
+            font-family: 'Bebas Neue', sans-serif; /* Font styling */
+            font-size: 30px; /* Adjust font size as needed */
+            text-align: center; /* Center text if it spans multiple lines */
+        }
+        .log-container {
+            white-space: pre-wrap;
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #f4f4f4;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 800px;
+            height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        /* Responsive Design */
+        @media (min-width: 600px) {
+            .button-container {
+                flex-direction: row;
+                justify-content: space-between;
+                max-width: 600px; /* Wider container on larger screens */
+            }
+            button {
+                width: 48%; /* Two buttons per row */
+                margin: 10px 1%;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .logo img {
+                margin-top: 0px; /* Add top margin for the logo in mobile view */
+            }
+        }
+
+        @media (min-width: 900px) {
+            body {
+                max-width: 2000px; /* Limit width of content on larger screens */
+            }
+            /*.button-container {
+                max-width: 500px; 
+            }*/
+            .button-container {
+                flex-direction: row; /* Arrange buttons in rows */
+                flex-wrap: wrap; /* Allow wrapping to the next line if needed */
+                justify-content: space-between; /* Distribute space evenly */
+                max-width: 100%; /* Allow wider container for buttons */
+            }
+            /*button {
+                font-size: 20px; /* Reduce font size for larger screens */
+                /*width: 30%; /* Adjust button size for larger screens */
+               
+            /*}*/
+            button {
+                font-size: 20px; /* Adjust font size for larger screens */
+                flex: 1 1 30%; /* Buttons take 30% of the container's width */
+                margin: 10px; /* Add margin between buttons */
+                max-width: 200px; /* Optional: limit maximum button width */
+            }
+        }
+    </style>
+</head>
+<body>
+    {% if g.process_running %}
+        <div class="banner">PIV Process is running</div>
+    {% endif %}
+    <div class="spacer"></div>
+    <div class="logo">
+        <img src="{{ url_for('static', filename='images/SPEC_logo.png') }}" alt="Logo" style="width: 120%; height: auto; border-radius: 10px; ">
+    </div>
+    <h2 class="highlighted-title">Select a log</h2>
+    <div class="content">
+
+        <div class="button-container">
+            <button onclick="loadLog('app')">APP Logs</button>
+            <button onclick="loadLog('piv')">PIV Logs</button>
+            <button onclick="loadLog('gstreamer')">GStreamer Logs</button>
+            <button onclick="loadLog('loopback')">Loopback Logs</button>
+            <button onclick="loadLog('diskSpace')">Disk Space Manager Logs</button>
+        </div>
+        <div class="log-container" id="log-content"></div>
+        <button onclick="refreshLog()">Refresh Logs</button>
+        <button onclick="location.href='/splash_utilities'">Back</button>
+    </div>
+    <script>
+        let currentLogType = null;
+        function loadLog(logType) {
+            currentLogType = logType;
+            fetch(`/logs/${logType}`)
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('log-content').innerText = data;
+                })
+                .catch(error => console.error('Error loading log:', error));
+        }
+        function refreshLog() {
+            if (currentLogType) {
+                loadLog(currentLogType); // Reload the current log type
+            }
+        }
+    </script>
+</head>
+</html>
+

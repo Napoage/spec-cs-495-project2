@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calibration Instructions</title>
+    <style>
+        @font-face {
+            font-family: 'Bebas Neue';
+            src: url('{{ url_for("static", filename="font/BebasNeue-Regular.ttf") }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            font-family: 'Bebas Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh; 
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            background-image: url("{{ url_for('static', filename='images/app_bg.jpg') }}");
+            background-size: cover;
+            background-attachment: fixed;
+        }
+        .content-box {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            max-width: 800px;
+            width: 90%;
+            margin: 20px;
+            padding: 20px;
+            text-align: left;
+        }
+        h1, h2 {
+            color: #333;
+            text-align: center;
+        }
+        p {
+            font-size: 16px;
+            margin: 10px 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        ul {
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        .image-placeholder {
+            width: 100%;
+            height: 200px;
+            background-color: #ddd;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            color: #666;
+            border: 2px dashed #bbb;
+        }
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #000;
+            color: white;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.2em;
+            font-family: 'Bebas Neue', sans-serif;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #4571a0;
+        }
+    </style>
+</head>
+<body>
+    <div class="content-box">
+        <h1>Calibration Instructions</h1>
+        <p>
+            On this page, a message will be displayed with either <strong>“DEVICE NEEDS TO BE CALIBRATED”</strong> or <strong>“LAST CALIBRATION: [date]”</strong>, depending on whether the device has been previously calibrated to run PIV.
+        </p>
+        <!-- <img src="../static/images/calibrate_splash.jpg" alt="Calibrate Splash"> -->
+        <h2>Calibrate</h2>
+        <p>
+            The <strong>CALIBRATE</strong> button will guide you through three calibration functions required for the PIV calculations. Each function on the app will first present instructions on a page about how to use it. Then, you will run the calibration function and proceed to the next one.
+        </p>
+        <p>
+            There are three main calibration pages:
+        </p>
+        <ul>
+            <li><strong>Trapezoid Calibration:</strong> Define the area of interest for PIV.</li><br>
+            <li><strong>PIV Params Configuration:</strong> Set the parameters for your PIV calculations.</li><br>
+            <li><strong>Mask Calibration:</strong> Define the area to exclude from PIV analysis.</li>
+        </ul>
+        <p>
+            The same instructions displayed here will also be on the pages before the calibration functions, as well as on the website for review if needed.
+        </p>
+        <h2>Main Menu</h2>
+        <p>
+            The first page you will come to is the <strong>MAIN MENU</strong> splash page. On this page, you will have three options to navigate to other sections and a logout button. Additional instructions on using the main menu are provided on that page.
+        </p>
+        <div class="button-container">
+            <button onclick="location.href='/calibrate_splash'">Back</button>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Trapezoid Adjustment</title>
+
+    <!-- Bootstrap for responsive layout and styling -->
+    <link rel="stylesheet" href="../static/bootstrap/bootstrap.min.css">
+    <link rel="preload" href="{{ url_for('static', filename='font/BebasNeue-Regular.ttf') }}" as="font" type="font/ttf" crossorigin="anonymous">
+    
+    <style>
+        
+        @font-face {
+            font-family: 'Bebas Neue';
+            src: url('{{ url_for("static", filename="font/BebasNeue-Regular.ttf") }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        html{
+            font-family: 'Bebas Neue'
+        }
+        body{
+            font-family: 'Bebas Neue'
+        }
+        .banner {
+            background-color: #ffcc00;
+            color: #333;
+            text-align: center;
+            width: 100%;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 1.2em;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Bebas Neue';
+            src: url('{{ url_for("static", filename="font/BebasNeue-Regular.ttf") }}') format('truetype');
+
+        }
+        
+
+        img#video_feed {
+            max-width: 100%;
+            height: auto;
+            border: 2px solid black;
+            display: block;
+            margin: 0 auto; /* Centering the image*/
+        }
+
+        /* For phones: max width 100% */
+        @media screen and (max-width: 599px) {
+            img#video_feed{
+                max-width: 100%;
+            }
+        }
+
+        /* For tablets: max width 75% and center feed */
+        @media screen and (min-width: 600px) and (max-width: 1024px)  {
+            img#video_feed{
+                max-width: 75%;
+                margin-left: auto;
+                margin-right: auto;
+            }
+        }
+
+        /* For laptops: max width 50% and center feed */
+        @media screen and (min-width: 1025px) {
+            img#video_feed{
+                max-width: 50%;
+                margin-left: auto;
+                margin-right: auto;
+            }
+        }
+
+        .controls {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /*margin: 10px;*/
+        }
+
+        .slider-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0px;
+        }
+
+        .slider {
+            width: 200px;
+            margin-top: 0px;
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            width: 200px; /* Match slider width */
+            margin-top: 0px;
+        }
+
+        .label-left {
+            text-align: left;
+            font-size: 14px;
+        }
+
+        .label-right {
+            text-align: right;
+            font-size: 14px;
+        }
+
+        .instructions {
+            margin-top: 30px;
+            font-family: Arial, Helvetica, sans-serif;
+            text-align: left;           
+        }
+
+        .instructions h2 {
+            margin-top: 0;
+            text-align: center;
+        }
+
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            width: 80%;
+            max-width: 300px;
+            align-items: center; /* Center the buttons horizontally */
+            justify-content: center; /* Center the buttons vertically */
+            margin-top: 20px; 
+            gap: 20px;
+        }
+        .button-group {
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .button-group button {
+            margin: 5px;
+            padding: 10px;
+            width: 250px;
+            font-family: 'Bebas Neue';
+            font-size: 18px;
+            background-color: #000;
+            color: white;
+        }     
+
+        button {
+            background-color: #000;
+            color: white;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 30px;
+            font-family: 'Bebas Neue', sans-serif;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #456ea0;
+        }
+        .btn:hover {
+            background-color: #456ea0;
+        }
+        .spacer {
+            height: 60px; /* Match the height of the banner */
+            width: 100%;
+        }
+
+        /* Responsive Design */
+        @media (min-width: 600px) {
+            .button-container {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+            button {
+                width: 20%;
+                margin: 10px 5px;
+            }
+        }
+        @media (max-width: 768px) {
+            .button-group button {
+                font-size: 18px;
+                padding: 8px;
+            }
+        }
+        /* For larger screens: Arrange sliders in a row */
+        @media (min-width: 600px) {
+            .slider-group {
+                display: flex;
+                flex-direction: row; /* Arrange slider containers in a row */
+                justify-content: center; /* Center the entire group */
+                align-items: flex-start; /* Align items at the top of the row */
+                gap: 20px; /* Add spacing between slider containers */
+            }
+
+            .slider-container {
+                flex-direction: column; /* Keep labels and sliders stacked within each container */
+            }
+        }
+        .level-container {
+            margin-bottom: 20px; /* Add spacing between the level and the trapezoid image */
+            text-align: center; /* Center-align all content in this container */
+        }
+        .vial {
+            width: 220px; /* Length of the vial */
+            height: 50px; /* Height of the vial */
+            background: linear-gradient(to bottom, #f7ff8e, #eeeb45); 
+            border: 4px solid #000;
+            border-radius: 25px; /* Rounded edges for a vial shape */
+            position: relative;
+            margin: 0 auto;
+            overflow: hidden;
+            box-shadow: inset 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        .marking {
+            width: 2px; /* Width of the marking */
+            height: 80%; /* Height of the marking */
+            background: #000;
+            position: absolute;
+            top: 10%; /* Center vertically within the vial */
+        }
+        .marking:nth-child(1) { left: 35%; } /* Left marking */
+        .marking:nth-child(2) { left: 65%; } /* Right marking */
+        .bubble {
+            width: 60px; /* Width of the oblong bubble */
+            height: 30px; /* Height of the oblong bubble */
+            /*background: radial-gradient(circle, #ffffff, #1a07ea); /* Bubble gradient for realism */
+            background: #1a07ea;
+            border-radius: 50% / 80%; /* Creates an oblong shape */
+            position: absolute;
+            top: 50%; /* Center vertically */
+            left: 50%; /* Center horizontally */
+            transform: translate(-50%, -50%);
+            box-shadow: inset 0 6px 8px rgba(0, 0, 0, 0.2);
+        }
+        .roll-display-container {
+            display: flex;
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Align items vertically */
+        }
+        .roll-display {
+            margin-top: 0px;
+            margin-bottom: 0px;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    {% if g.process_running %}
+        <div class="banner">PIV Process is running</div>
+    {% endif %}
+    <div class="spacer"></div>
+    <div class="container">
+
+        <h1 class="text-center">Trapezoid Adjustment</h1>
+        <div class="level-container text-center">
+            <p>Set roll = 0° (system is not tilted side-to-side)</p>
+            <div class="vial">
+                <div class="marking"></div>
+                <div class="marking"></div>
+                <div class="bubble"></div>
+            </div>
+            <div class = "roll-display-container">
+                <div class="roll-display">Roll: <span id="roll-angle">0</span>°</div>
+                <!--<div class="roll-display">Pitch: <span id="pitch-angle">0</span>°</div>-->
+            </div>    
+        </div>
+        <div class="text-center">
+            <img src="/process_trapezoid" alt="Video feed" id="video_feed">
+        </div>
+
+
+        <!--Sliders-->
+        <div class="controls">
+            <h3>Move Points</h3>
+            <p>Sliders change to constrain trapezoid coordinates</p>
+
+            <div class="slider-group">
+                
+                <div class="slider-container">
+                    <label for="top_left_x">Top Left X:</label>
+                    <input 
+                        type="range" 
+                        class="slider" 
+                        id="top_left_x" 
+                        min="72" 
+                        max="1910" 
+                        value="10" 
+                        oninput="slidePoint('top_left_x', this.value); updateMaxMinSlider()">
+                    <div class="slider-labels">
+                        <span class="label-left">Left</span>
+                        <span class="label-right">Right</span>
+                    </div>
+
+                    <label for="top_left_y">Top Left Y:</label>
+                    <!--The minimum here should be the x coord of the largest trapezoid possible. Orig set=10, try 72 to see if fixes freakout-->
+                    <input 
+                    type="range" 
+                    class="slider" 
+                    id="top_left_y" 
+                    min="10" 
+                    max="1070" 
+                    value="10" 
+                    oninput="slidePoint('top_left_y', this.value); updateMaxMinSlider()">
+                    <div class="slider-labels">
+                        <span class="label-left">Up</span>
+                        <span class="label-right">Down</span>
+                    </div>
+            </div>
+
+            <div class="slider-container">
+                <label for="top_right_x">Top Right X:</label>
+                <input 
+                    type="range" 
+                    class="slider" 
+                    id="top_right_x" 
+                    min="10" 
+                    max="1847" 
+                    value="10" 
+                    oninput="slidePoint('top_right_x', this.value); updateMaxMinSlider() ">
+                <div class="slider-labels">
+                    <span class="label-left">Left</span>
+                    <span class="label-right">Right</span>
+                </div>  
+                
+                <label for="bottom_left_y">Bottom Left Y:</label>
+                <input 
+                    type="range" 
+                    class="slider" 
+                    id="bottom_left_y" 
+                    min="10" 
+                    max="1070" 
+                    value="10" 
+                    oninput="slidePoint('bottom_left_y', this.value); updateMaxMinSlider()">
+                <div class="slider-labels">
+                    <span class="label-left">Up</span>
+                    <span class="label-right">Down</span>
+                </div>    
+
+            </div>
+        </div>
+
+            <div class="button-group">
+                <button class="btn btn-success" onclick="transformed()">Show Transformed Image</button>
+            </div>
+            <div class="button-group">
+                <button class="btn btn-success" onclick="savePoints()">Save Points</button>
+            </div>
+        <div id="transformed-image-container" class="text-center" style="margin-top: 20px;">
+            <img id="transformed-image" src="" alt="Transformed Image" style="display:none; max-width: 100%; height: auto; border: 2px solid black;">
+        </div>
+        <div class="button-group">
+            <button class = "btn btn-primary" onclick="location.href='/trapezoid_instructions'">Instructions</button>
+            <button class = "btn btn-primary" onclick="location.href='/reset_trapezoid'">Reset Trapezoid</button>
+            <button class = "btn btn-primary" onclick="location.href='/splash_calib_setup'">Back</button>
+        </div>
+        <!-- Instructions Section -->
+        <div class="instructions">
+            <h2>Instructions</h2>
+
+            <h3>Positioning the Trapezoid:</h3>
+            <p>Move the trapezoid to cover the area of the river from which you wish to obtain velocity measurements. Only this area will be measured. Aim to maximize its size, covering as much of the river as possible while ensuring that the entire trapezoid remains within the camera frame. Experiment with different camera angles and trapezoid placements to capture the desired area for velocity measurement.</p>
+
+            <h3>Finalizing the Setup:</h3>
+            <p>Once you have positioned the trapezoid as desired, securely tighten the camera. Continue to monitor the trapezoid's position during this process and make any necessary adjustments. After finalizing the camera angle and trapezoid position, click "Save" to lock in your settings.</p>
+
+            <h3>Instructions for Adjusting the Trapezoid:</h3>
+            <ul>
+                <li><strong>Moving the Trapezoid:</strong> Adjust the top points to shift the trapezoid left or right, altering its width and X position. Modify the bottom left point to change the trapezoid's height and Y position.</li>
+                <li><strong>Tilting the Camera:</strong> Tilting the camera upward will cause the angles of the trapezoid to widen, while tilting it downward will make the angles narrower.</li>
+            </ul>
+        </div>
+
+    
+
+    <script src="{{ url_for('static', filename='bootstrap/jquery-3.5.1.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='bootstrap/popper.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='bootstrap/bootstrap.min.js') }}"></script> 
+    
+    <!-- Get the existing values of the trapezoid points, as the slider params depend on them.-->
+    <!--<script src="{{ url_for('static', filename='js/calibrate_trapezoid.js') }}"></script>-->
+    <script src="{{ url_for('static', filename='js/bubble_level.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/init_sliders.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/calib_trap.js') }}"></script>
+
+</body>
+</html>
