@@ -44,6 +44,9 @@ def process_video(video_path, threshold=1000.0):
         return
 
     frame_count = 0
+    blurry_frames = 0
+    sharp_frames = 0 
+    variance_list = []
     while True:
         ret, frame = cap.read()
         if not ret:
@@ -57,22 +60,36 @@ def process_video(video_path, threshold=1000.0):
         # Check if the frame is blurry
         _, blurry, variance = is_blurry(frame, threshold=threshold)
 
-        print(
-            f"Frame {frame_count} is {'blurry' if blurry else 'sharp'} (Variance: {variance:.2f})"
-        )
+        if blurry:
+            blurry_frames += 1
+        else:
+            sharp_frames += 1
+
+        variance_list.append(variance)
+
+    
+        # print(
+        #     f"Frame {frame_count} is {'blurry' if blurry else 'sharp'} (Variance: {variance:.2f})"
+        # )
 
         # Optional: Display the frame (press 'q' to quit)
-        cv2.imshow("Frame", frame)
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            break
+        # cv2.imshow("Frame", frame)
+        # if cv2.waitKey(1) & 0xFF == ord("q"):
+        #     break
 
     # Release the video capture object and close all OpenCV windows
     cap.release()
-    cv2.destroyAllWindows()
+    #cv2.destroyAllWindows()
+    print(f"\n--- Summary ---")
+    print(f"Total frames: {frame_count}")
+    print(f"Blurry frames: {blurry_frames} ({blurry_frames/frame_count*100:.1f}%)")
+    print(f"Sharp frames: {sharp_frames} ({sharp_frames/frame_count*100:.1f}%)")
+
+    avg_variance = sum(variance_list) / len(variance_list)
+    print(f"Average Variance: {avg_variance:.2f}")
 
 
-# Example usage
 video_path = (
-    r"Path/video.mp4"  # Replace with your video path
+    r"Water Moving_darken_full.mp4"  # Replace with your video path
 )
 process_video(video_path, threshold=1250.0)
