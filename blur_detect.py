@@ -1,5 +1,6 @@
 import os
 import cv2
+import numpy as np
 import matplotlib.pyplot as plt
 
 
@@ -27,6 +28,26 @@ def is_blurry(image, threshold=1000.0):
     # Determine if the image is blurry
     return laplacian, variance < threshold, variance
 
+def check_exposure(image):
+    #convert image to grayscale
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    #create histogram for grayscale image. hist[i] = # of pixels with intensity i
+    hist = cv2.calcHist([gray], [0], None, [256], [0,256])
+
+    #get total # of pixels by multiplying width and height
+    total_pixels = gray.shape[0] * gray.shape[1]
+    #get percentage of dark pixels, defined as intensity 0 to 50
+    dark_pixels = sum(hist[:50]) / total_pixels
+    #get percentage of bright pixels, defined as intensity 200 to 256
+    bright_pixels = sum(hist[200:256]) / total_pixels
+
+    #get percentage of pixels that are close to pure black
+    clipped_black = np.sum(gray <= 5) / total_pixels
+    #get percentage of pixels that are close to pure white
+    clipped_white = np.sum(gray >= 250) / total_pixels
+
+    return dark_pixels, bright_pixels, clipped_black, clipped_white
+
 
 def process_video(video_path, threshold=1000.0):
     """
@@ -47,6 +68,14 @@ def process_video(video_path, threshold=1000.0):
     blurry_frames = 0
     sharp_frames = 0 
     variance_list = []
+
+    # number of frames that are too bright or too dark overall
+    overall_dark_count = 0
+    overall_bright_count = 0
+    # number of frames that have too much clipped black or white
+    clipped_black_count = 0
+    clipped_white_count = 0
+
     while True:
         ret, frame = cap.read()
         if not ret:
@@ -66,6 +95,23 @@ def process_video(video_path, threshold=1000.0):
             sharp_frames += 1
 
         variance_list.append(variance)
+
+        # check exposure levels
+        dark_pixels, bright_pixels, clipped_black, clipped_white = check_exposure(frame)
+
+        if dark_pixels > .6:
+            overall_dark_count += 1
+
+        if bright_pixels > .4:
+            overall_bright_count += 1
+
+        if clipped_black > .1:
+            clipped_black_count += 1
+
+        if clipped_white > .1:
+            clipped_white_count += 1    
+        
+
 
     
         # print(
@@ -87,6 +133,11 @@ def process_video(video_path, threshold=1000.0):
 
     avg_variance = sum(variance_list) / len(variance_list)
     print(f"Average Variance: {avg_variance:.2f}")
+
+    print(f"Overall dark frames: {overall_dark_count} ({overall_dark_count/frame_count*100:.1f}%)")
+    print(f"Overall bright frames: {overall_bright_count} ({overall_bright_count/frame_count*100:.1f}%)")
+    print(f"Clipped black frames: {clipped_black_count} ({clipped_black_count/frame_count*100:.1f}%)") 
+    print(f"Clipped white frames: {clipped_white_count} ({clipped_white_count/frame_count*100:.1f}%)")
 
 
 video_path = (
