@@ -16,7 +16,7 @@
 
 
 # TODO: this path should be discovered instead of hard-coded
-PARENT_DIR='/home/spec/spec'
+PARENT_DIR="$(cd "$(dirname "$0")" && pwd)"
 IMU_script="sudo python3 ${PARENT_DIR}/IMU/run_imu.py --unique-tag=IMUProcess"
 LOG_FILE="${PARENT_DIR}/script.log"
 

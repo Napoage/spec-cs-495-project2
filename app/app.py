@@ -10,6 +10,9 @@ import threading
 import json
 from flask import Flask, render_template, send_file, Response, request, jsonify, redirect, url_for, session, stream_with_context, g, flash
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+import subprocess
+from pathlib import Path
+from flask import request, jsonify
 
 # Mock hardware for local testing
 try:
@@ -2644,6 +2647,68 @@ def unmount_USB():
     
   
     return redirect(request.referrer or url_for('splash'))  
+
+# --- Goodness-based auto loop control ---
+
+START_AT = 80   # start capturing when score >= this
+STOP_AT  = 78   # stop capturing when score < this
+
+PIV_PROC = None
+IS_CAPTURING = False
+
+def start_auto():
+    global PIV_PROC, IS_CAPTURING, video_handler
+    # stop preview so GStreamer can claim the device
+    try:
+        if video_handler:
+            video_handler.stop()
+    except Exception:
+        pass
+
+    # tell the shell loop to run and spawn it if not running
+    (Path(BASE_DIR) / 'monitor_file.txt').write_text('run\n')
+    if not PIV_PROC or (PIV_PROC.poll() is not None):
+        PIV_PROC = subprocess.Popen(['bash', 'run_PIV.sh'], cwd=str(BASE_DIR))
+    IS_CAPTURING = True
+
+def stop_auto():
+    global IS_CAPTURING
+    (Path(BASE_DIR) / 'monitor_file.txt').write_text('stop\n')
+    IS_CAPTURING = False
+    # restart preview without blocking the request
+    threading.Thread(target=_bring_preview_back, daemon=True).start()
+
+def _bring_preview_back():
+    global video_handler
+    try:
+        video_handler = VideoStreamHandler()  # this will wait until camera is free
+    except Exception:
+        pass
+
+
+@app.route('/api/goodness', methods=['POST'])
+def api_goodness():
+    data = request.get_json(silent=True) or {}
+    try:
+        score = float(data.get('score'))
+    except (TypeError, ValueError):
+        return jsonify({'error': 'score must be a number 0-100'}), 400
+
+    global IS_CAPTURING
+    # hysteresis: start and stop thresholds are different
+    if score >= START_AT and not IS_CAPTURING:
+        start_auto()
+    elif score < STOP_AT and IS_CAPTURING:
+        stop_auto()
+
+    return jsonify({
+        'ok': True,
+        'score': score,
+        'capturing': IS_CAPTURING,
+        'start_at': START_AT,
+        'stop_at': STOP_AT
+    })
+
 
 if __name__ == "__main__":
     #start imu thread then the app

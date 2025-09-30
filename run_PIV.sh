@@ -17,7 +17,7 @@
 
 
 # Monitor file to watch
-PARENT_DIR='/home/spec/spec'
+PARENT_DIR="$(cd "$(dirname "$0")" && pwd)"
 monitor_file="${PARENT_DIR}/monitor_file.txt"
 IMU_script="sudo python3 ${PARENT_DIR}/IMU/run_imu.py --unique-tag=IMUProcess"
 # Path to your config.json file
@@ -98,8 +98,16 @@ while true; do
       sleep_time=$((next_run_time - current_time))
 
       echo "Sleeping until $(date -d @$next_run_time)..."
-      sleep "$sleep_time"
-
+      end=$next_run_time
+      while (( $(date +%s) < end )); do
+        # wake early if stop requested
+        if [[ "$(cat "$monitor_file" 2>/dev/null)" == "stop" ]]; then
+          echo "Stop detected during sleep; waking early."
+          break
+        fi
+        sleep 1
+      done
+      
     elif [ "$file_content" == "stop" ]; then
       echo "Stopped. Checking again in 5 seconds..."
       sleep 5
