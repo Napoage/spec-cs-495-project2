@@ -100,15 +100,6 @@ while true; do
 
       echo "Sleeping until $(date -d @$next_run_time)..."
       sleep "$sleep_time"
-      #end=$next_run_time
-      #while (( $(date +%s) < end )); do
-       # # wake early if stop requested
-        #if [[ "$(cat "$monitor_file" 2>/dev/null)" == "stop" ]]; then
-         # echo "Stop detected during sleep; waking early."
-          #break
-        #fi
-        #sleep 1
-      #done
       
     elif [ "$file_content" == "stop" ]; then
       echo "Stopped. Checking again in 5 seconds..."
