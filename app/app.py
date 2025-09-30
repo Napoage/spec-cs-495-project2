@@ -1419,6 +1419,66 @@ def get_csv_data():
         return "File not found", 404
 
 
+@app.route('/data_visualization')
+@login_required
+def data_visualization():
+    """
+    Display PIV data visualization page with comprehensive charts
+    """
+    return render_template('data_visualization.html')
+
+
+@app.route('/data_visualization/get_data')
+@login_required
+def get_visualization_data():
+    """
+    Get PIV results data from CSV for visualization
+    """
+    # Look for CSV in parent directory (project root)
+    csv_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'piv_results.csv')
+
+    if not os.path.exists(csv_path):
+        return jsonify({"error": "PIV results CSV file not found"}), 404
+
+    try:
+        df = pd.read_csv(csv_path)
+
+        # Calculate statistics
+        stats = {
+            'total_vectors': len(df),
+            'u_mean': float(df['u_velocity'].mean()),
+            'u_std': float(df['u_velocity'].std()),
+            'v_mean': float(df['v_velocity'].mean()),
+            'v_std': float(df['v_velocity'].std()),
+            'mag_mean': float(df['velocity_magnitude'].mean()),
+            'mag_max': float(df['velocity_magnitude'].max()),
+            'corr_mean': float(df['correlation'].mean()),
+            'grid_x': len(df['x_position'].unique()),
+            'grid_y': len(df['y_position'].unique()),
+            'coverage_x': float(df['x_position'].max() - df['x_position'].min()),
+            'coverage_y': float(df['y_position'].max() - df['y_position'].min()),
+            'flow_direction': float(np.degrees(np.arctan2(df['v_velocity'].mean(), df['u_velocity'].mean()))),
+            'high_speed_count': int((df['velocity_magnitude'] > df['velocity_magnitude'].quantile(0.8)).sum()),
+            'low_corr_count': int((df['correlation'] < 0.1).sum()),
+            'low_corr_pct': float(100 * (df['correlation'] < 0.1).sum() / len(df))
+        }
+
+        # Return data for visualization
+        data = {
+            'x': df['x_position'].tolist(),
+            'y': df['y_position'].tolist(),
+            'u': df['u_velocity'].tolist(),
+            'v': df['v_velocity'].tolist(),
+            'mag': df['velocity_magnitude'].tolist(),
+            'corr': df['correlation'].tolist(),
+            'stats': stats
+        }
+
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route('/video_feed')
 @login_required
 def video_feed():

@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preload" href="{{ url_for('static', filename='font/BebasNeue-Regular.ttf') }}" as="font" type="font/ttf" crossorigin="anonymous">
+    <title>PIV Data Visualization</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        @font-face {
+            font-family: 'Bebas Neue';
+            src: url('{{ url_for("static", filename="font/BebasNeue-Regular.ttf") }}') format('truetype');
+        }
+        body {
+            font-family: 'Bebas Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            background-color: #bbbbbb;
+            background-image: url("{{ url_for('static', filename='images/app_bg.jpg') }}");
+            background-size: cover;
+            background-attachment: fixed;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            width: 100%;
+            max-width: 100%;
+            margin: 0;
+            padding: 20px;
+            background-color: #ffffff;
+            min-height: 100vh;
+        }
+        .banner {
+            background-color: #ffcc00;
+            color: #333;
+            text-align: center;
+            width: 100%;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 1.2em;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+        }
+        h1, h2 {
+            margin-top: 20px;
+            color: #333;
+        }
+        .highlighted-title {
+            display: inline-block;
+            background-color: white;
+            color: black;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 30px;
+            text-align: center;
+        }
+        button {
+            background-color: #000;
+            color: white;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 30px;
+            font-family: 'Bebas Neue';
+            text-align: center;
+            transition: background-color 0.3s;
+            width: 100%;
+            max-width: 300px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            width: 100%;
+            max-width: 1800px;
+            margin: 20px 0;
+        }
+        .chart-container {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+            min-height: 500px;
+        }
+        .chart-container h3 {
+            margin-top: 0;
+            text-align: center;
+        }
+        .chart {
+            width: 100%;
+            height: 450px;
+        }
+        .stats-container {
+            background-color: #f0f0f0;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            width: 100%;
+            max-width: 1800px;
+        }
+        .stats-container h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 10px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+        }
+        .stat-item {
+            padding: 8px;
+            background-color: white;
+            border-radius: 4px;
+        }
+        .loading {
+            text-align: center;
+            font-size: 24px;
+            padding: 40px;
+        }
+        @media (max-width: 1200px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        @media (max-width: 600px) {
+            .highlighted-title {
+                width: 65%;
+            }
+        }
+    </style>
+</head>
+<body>
+    {% if g.process_running %}
+        <div class="banner">PIV Process is running</div>
+    {% endif %}
+    <div class="container">
+        <h1 class="highlighted-title">PIV Data Visualization</h1>
+
+        <div style="margin: 20px 0; text-align: center;">
+            <label for="csv-file-select" style="font-size: 18px; margin-right: 10px;">Select CSV File:</label>
+            <input type="file" id="csv-file-select" accept=".csv" style="font-size: 16px; padding: 5px;">
+            <button id="load-csv-btn" style="margin-left: 10px; padding: 10px 20px; font-size: 18px;">Load CSV</button>
+        </div>
+
+        <div class="loading" id="loading">Select a CSV file or loading default PIV data...</div>
+
+        <div id="visualization-content" style="display:none; width:100%;">
+            <div class="stats-container">
+                <h3>Velocity Statistics</h3>
+                <div class="stats-grid" id="stats"></div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <h3>PIV Vector Field</h3>
+                    <div id="chart1" class="chart"></div>
+                </div>
+
+                <div class="chart-container">
+                    <h3>Horizontal Velocity (U)</h3>
+                    <div id="chart2" class="chart"></div>
+                </div>
+
+                <div class="chart-container">
+                    <h3>Vertical Velocity (V) - Corrected</h3>
+                    <div id="chart3" class="chart"></div>
+                </div>
+
+                <div class="chart-container">
+                    <h3>Velocity Magnitude</h3>
+                    <div id="chart4" class="chart"></div>
+                </div>
+
+                <div class="chart-container">
+                    <h3>Velocity Distribution</h3>
+                    <div id="chart5" class="chart"></div>
+                </div>
+
+                <div class="chart-container">
+                    <h3>Measurement Quality vs Speed</h3>
+                    <div id="chart6" class="chart"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center button-group" style="margin: 20px 0;">
+            <button onclick="location.href='/splash'">Main Menu</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up file upload handler
+            document.getElementById('load-csv-btn').addEventListener('click', function() {
+                const fileInput = document.getElementById('csv-file-select');
+                if (fileInput.files.length > 0) {
+                    loadCSVFile(fileInput.files[0]);
+                } else {
+                    alert('Please select a CSV file first');
+                }
+            });
+
+            // Try to load default data
+            loadVisualization();
+        });
+
+        function loadCSVFile(file) {
+            document.getElementById('loading').textContent = 'Loading CSV file...';
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('visualization-content').style.display = 'none';
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const csvData = e.target.result;
+                    const data = parseCSV(csvData);
+
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('visualization-content').style.display = 'block';
+
+                    displayStats(data);
+                    createVectorField(data);
+                    createUVelocityHeatmap(data);
+                    createVVelocityHeatmap(data);
+                    createMagnitudeHeatmap(data);
+                    createVelocityHistograms(data);
+                    createQualityScatter(data);
+                } catch (error) {
+                    document.getElementById('loading').textContent = 'Error parsing CSV: ' + error.message;
+                    console.error('Error:', error);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function parseCSV(csvText) {
+            const lines = csvText.trim().split('\n');
+            const headers = lines[0].split(',').map(h => h.trim());
+
+            // Expected columns: x_position, y_position, u_velocity, v_velocity, velocity_magnitude, correlation
+            const data = {
+                x: [],
+                y: [],
+                u: [],
+                v: [],
+                mag: [],
+                corr: []
+            };
+
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',');
+                if (values.length >= 6) {
+                    data.x.push(parseFloat(values[0]));
+                    data.y.push(parseFloat(values[1]));
+                    data.u.push(parseFloat(values[2]));
+                    data.v.push(parseFloat(values[3]));
+                    data.mag.push(parseFloat(values[4]));
+                    data.corr.push(parseFloat(values[5]));
+                }
+            }
+
+            // Calculate statistics
+            data.stats = calculateStats(data);
+
+            return data;
+        }
+
+        function calculateStats(data) {
+            const mean = arr => arr.reduce((a, b) => a + b, 0) / arr.length;
+            const std = arr => {
+                const avg = mean(arr);
+                return Math.sqrt(arr.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / arr.length);
+            };
+
+            const x_unique = [...new Set(data.x)];
+            const y_unique = [...new Set(data.y)];
+
+            const u_mean = mean(data.u);
+            const v_mean = mean(data.v);
+
+            return {
+                total_vectors: data.x.length,
+                u_mean: u_mean,
+                u_std: std(data.u),
+                v_mean: v_mean,
+                v_std: std(data.v),
+                mag_mean: mean(data.mag),
+                mag_max: Math.max(...data.mag),
+                corr_mean: mean(data.corr),
+                grid_x: x_unique.length,
+                grid_y: y_unique.length,
+                coverage_x: Math.max(...data.x) - Math.min(...data.x),
+                coverage_y: Math.max(...data.y) - Math.min(...data.y),
+                flow_direction: Math.atan2(v_mean, u_mean) * 180 / Math.PI,
+                high_speed_count: data.mag.filter(m => {
+                    const sorted = [...data.mag].sort((a, b) => a - b);
+                    const q80 = sorted[Math.floor(sorted.length * 0.8)];
+                    return m > q80;
+                }).length,
+                low_corr_count: data.corr.filter(c => c < 0.1).length,
+                low_corr_pct: (data.corr.filter(c => c < 0.1).length / data.corr.length) * 100
+            };
+        }
+
+        function loadVisualization() {
+            fetch('/data_visualization/get_data')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        document.getElementById('loading').textContent = 'Error: ' + data.error + ' (Please select a CSV file to visualize)';
+                        return;
+                    }
+
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('visualization-content').style.display = 'block';
+
+                    displayStats(data);
+                    createVectorField(data);
+                    createUVelocityHeatmap(data);
+                    createVVelocityHeatmap(data);
+                    createMagnitudeHeatmap(data);
+                    createVelocityHistograms(data);
+                    createQualityScatter(data);
+                })
+                .catch(error => {
+                    document.getElementById('loading').textContent = 'No default CSV found. Please select a CSV file to visualize.';
+                    console.error('Error:', error);
+                });
+        }
+
+        function displayStats(data) {
+            const stats = data.stats;
+            const statsHTML = `
+                <div class="stat-item"><strong>Total Vectors:</strong> ${stats.total_vectors}</div>
+                <div class="stat-item"><strong>U-velocity:</strong> ${stats.u_mean.toFixed(3)} ± ${stats.u_std.toFixed(3)} m/s</div>
+                <div class="stat-item"><strong>V-velocity:</strong> ${stats.v_mean.toFixed(3)} ± ${stats.v_std.toFixed(3)} m/s</div>
+                <div class="stat-item"><strong>Speed (mean):</strong> ${stats.mag_mean.toFixed(3)} m/s</div>
+                <div class="stat-item"><strong>Speed (max):</strong> ${stats.mag_max.toFixed(3)} m/s</div>
+                <div class="stat-item"><strong>Correlation (mean):</strong> ${stats.corr_mean.toFixed(3)}</div>
+                <div class="stat-item"><strong>Grid dimensions:</strong> ${stats.grid_x} x ${stats.grid_y} points</div>
+                <div class="stat-item"><strong>Coverage area:</strong> ${stats.coverage_x.toFixed(0)} x ${stats.coverage_y.toFixed(0)} pixels</div>
+                <div class="stat-item"><strong>Flow direction:</strong> ${stats.flow_direction.toFixed(1)}° from horizontal</div>
+                <div class="stat-item"><strong>High-speed areas:</strong> ${stats.high_speed_count} vectors</div>
+                <div class="stat-item"><strong>Low correlation:</strong> ${stats.low_corr_count} vectors (${stats.low_corr_pct.toFixed(1)}%)</div>
+            `;
+            document.getElementById('stats').innerHTML = statsHTML;
+        }
+
+        function createVectorField(data) {
+            const step = Math.max(1, Math.floor(data.x.length / 200));
+            const x_sub = [], y_sub = [], u_sub = [], v_sub = [];
+
+            for (let i = 0; i < data.x.length; i += step) {
+                x_sub.push(data.x[i]);
+                y_sub.push(data.y[i]);
+                u_sub.push(data.u[i]);
+                v_sub.push(-data.v[i]); // Flip V for correct display
+            }
+
+            const trace = {
+                x: x_sub,
+                y: y_sub,
+                mode: 'markers',
+                marker: {
+                    size: 8,
+                    color: data.mag.filter((_, i) => i % step === 0),
+                    colorscale: 'Viridis',
+                    showscale: true,
+                    colorbar: {title: 'Speed (m/s)'}
+                },
+                type: 'scatter'
+            };
+
+            const annotations = [];
+            for (let i = 0; i < x_sub.length; i++) {
+                const scale = 20;
+                annotations.push({
+                    ax: x_sub[i],
+                    ay: y_sub[i],
+                    x: x_sub[i] + u_sub[i] * scale,
+                    y: y_sub[i] + v_sub[i] * scale,
+                    xref: 'x',
+                    yref: 'y',
+                    axref: 'x',
+                    ayref: 'y',
+                    showarrow: true,
+                    arrowhead: 2,
+                    arrowsize: 1,
+                    arrowwidth: 1.5,
+                    arrowcolor: 'red'
+                });
+            }
+
+            const layout = {
+                xaxis: {title: 'X (pixels)'},
+                yaxis: {title: 'Y (pixels)'},
+                annotations: annotations,
+                hovermode: 'closest',
+                showlegend: false
+            };
+
+            Plotly.newPlot('chart1', [trace], layout, {responsive: true});
+        }
+
+        function createUVelocityHeatmap(data) {
+            const gridData = createGrid(data.x, data.y, data.u);
+
+            const trace = {
+                z: gridData.z,
+                x: gridData.x_unique,
+                y: gridData.y_unique,
+                type: 'heatmap',
+                colorscale: 'RdBu',
+                reversescale: true,
+                colorbar: {title: 'U velocity (m/s)'}
+            };
+
+            const layout = {
+                xaxis: {title: 'Grid X'},
+                yaxis: {title: 'Grid Y'}
+            };
+
+            Plotly.newPlot('chart2', [trace], layout, {responsive: true});
+        }
+
+        function createVVelocityHeatmap(data) {
+            const v_flipped = data.v.map(v => -v);
+            const gridData = createGrid(data.x, data.y, v_flipped);
+
+            const trace = {
+                z: gridData.z,
+                x: gridData.x_unique,
+                y: gridData.y_unique,
+                type: 'heatmap',
+                colorscale: 'RdBu',
+                reversescale: true,
+                colorbar: {title: 'V velocity (m/s, corrected)'}
+            };
+
+            const layout = {
+                xaxis: {title: 'Grid X'},
+                yaxis: {title: 'Grid Y'}
+            };
+
+            Plotly.newPlot('chart3', [trace], layout, {responsive: true});
+        }
+
+        function createMagnitudeHeatmap(data) {
+            const gridData = createGrid(data.x, data.y, data.mag);
+
+            const trace = {
+                z: gridData.z,
+                x: gridData.x_unique,
+                y: gridData.y_unique,
+                type: 'heatmap',
+                colorscale: 'Viridis',
+                colorbar: {title: 'Speed (m/s)'}
+            };
+
+            const layout = {
+                xaxis: {title: 'Grid X'},
+                yaxis: {title: 'Grid Y'}
+            };
+
+            Plotly.newPlot('chart4', [trace], layout, {responsive: true});
+        }
+
+        function createVelocityHistograms(data) {
+            const trace1 = {
+                x: data.u,
+                type: 'histogram',
+                name: 'U velocity',
+                opacity: 0.7,
+                marker: {color: 'blue'},
+                nbinsx: 30
+            };
+
+            const trace2 = {
+                x: data.v,
+                type: 'histogram',
+                name: 'V velocity',
+                opacity: 0.7,
+                marker: {color: 'red'},
+                nbinsx: 30
+            };
+
+            const trace3 = {
+                x: data.mag,
+                type: 'histogram',
+                name: 'Speed',
+                opacity: 0.7,
+                marker: {color: 'green'},
+                nbinsx: 30
+            };
+
+            const layout = {
+                barmode: 'overlay',
+                xaxis: {title: 'Velocity (m/s)'},
+                yaxis: {title: 'Count'},
+                showlegend: true
+            };
+
+            Plotly.newPlot('chart5', [trace1, trace2, trace3], layout, {responsive: true});
+        }
+
+        function createQualityScatter(data) {
+            const trace = {
+                x: data.corr,
+                y: data.mag,
+                mode: 'markers',
+                type: 'scatter',
+                marker: {
+                    size: 5,
+                    opacity: 0.6,
+                    color: 'blue'
+                },
+                name: 'Data points'
+            };
+
+            // Calculate trend line
+            const validIdx = [];
+            for (let i = 0; i < data.corr.length; i++) {
+                if (data.corr[i] !== null && !isNaN(data.corr[i])) {
+                    validIdx.push(i);
+                }
+            }
+
+            if (validIdx.length > 1) {
+                const x_valid = validIdx.map(i => data.corr[i]);
+                const y_valid = validIdx.map(i => data.mag[i]);
+
+                const trend = linearRegression(x_valid, y_valid);
+                const x_min = Math.min(...x_valid);
+                const x_max = Math.max(...x_valid);
+
+                const trendTrace = {
+                    x: [x_min, x_max],
+                    y: [trend.slope * x_min + trend.intercept, trend.slope * x_max + trend.intercept],
+                    mode: 'lines',
+                    type: 'scatter',
+                    line: {
+                        color: 'red',
+                        width: 2,
+                        dash: 'dash'
+                    },
+                    name: 'Trend line'
+                };
+
+                var traces = [trace, trendTrace];
+            } else {
+                var traces = [trace];
+            }
+
+            const layout = {
+                xaxis: {title: 'Correlation Coefficient'},
+                yaxis: {title: 'Velocity Magnitude (m/s)'},
+                showlegend: true
+            };
+
+            Plotly.newPlot('chart6', traces, layout, {responsive: true});
+        }
+
+        function createGrid(x, y, values) {
+            const x_unique = [...new Set(x)].sort((a, b) => a - b);
+            const y_unique = [...new Set(y)].sort((a, b) => a - b);
+
+            const z = Array(y_unique.length).fill().map(() => Array(x_unique.length).fill(null));
+
+            for (let i = 0; i < x.length; i++) {
+                const xi = x_unique.indexOf(x[i]);
+                const yi = y_unique.indexOf(y[i]);
+                if (xi !== -1 && yi !== -1) {
+                    z[yi][xi] = values[i];
+                }
+            }
+
+            return {z, x_unique, y_unique};
+        }
+
+        function linearRegression(x, y) {
+            const n = x.length;
+            let sum_x = 0, sum_y = 0, sum_xy = 0, sum_xx = 0;
+
+            for (let i = 0; i < n; i++) {
+                sum_x += x[i];
+                sum_y += y[i];
+                sum_xy += x[i] * y[i];
+                sum_xx += x[i] * x[i];
+            }
+
+            const slope = (n * sum_xy - sum_x * sum_y) / (n * sum_xx - sum_x * sum_x);
+            const intercept = (sum_y - slope * sum_x) / n;
+
+            return {slope, intercept};
+        }
+    </script>
+</body>
+</html>
