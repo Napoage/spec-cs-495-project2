@@ -17,8 +17,8 @@
 
 
 # Monitor file to watch
-PARENT_DIR='/home/spec/spec'
-#PARENT_DIR="$(cd "$(dirname "$0")" && pwd)"
+#PARENT_DIR='/home/spec/spec'
+PARENT_DIR="$(cd "$(dirname "$0")" && pwd)"
 monitor_file="${PARENT_DIR}/monitor_file.txt"
 IMU_script="sudo python3 ${PARENT_DIR}/IMU/run_imu.py --unique-tag=IMUProcess"
 # Path to your config.json file
