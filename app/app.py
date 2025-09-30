@@ -2172,7 +2172,7 @@ def run_process():
     script indicating that it should start the run process. Users are then redirected to an option menu where they can either view the results or 
     cancel piv
     """
-    with open(MAIN_CONFIG, 'r') as cf:
+    """with open(MAIN_CONFIG, 'r') as cf:
         config = json.load(cf)
     config["last Calibrated"] = datetime.now().strftime("%m-%d-%y")
     with open(MAIN_CONFIG, 'w') as f:
@@ -2185,6 +2185,8 @@ def run_process():
         f.write("run")
 
         
+    return redirect(url_for('running_piv_options'))"""
+    start_piv_process()
     return redirect(url_for('running_piv_options'))
 
 
@@ -2648,7 +2650,61 @@ def unmount_USB():
   
     return redirect(request.referrer or url_for('splash'))  
 
-# --- Goodness-based auto loop control ---
+#Nick Changes
+import threading, time, random
+
+running = False
+thread = None
+CONFIDENCE_THRESHOLD = 0.8
+
+def confidence_model():
+    score = random.random()
+    print("Confidence model generated score: ", score)
+    return score
+
+def start_piv_process():
+    """Core logic for starting the PIV process, safe to call anywhere."""
+    with open(MAIN_CONFIG, 'r') as cf:
+        config = json.load(cf)
+    config["last Calibrated"] = datetime.now().strftime("%m-%d-%y")
+    with open(MAIN_CONFIG, 'w') as f:
+        json.dump(config, f, indent=4)
+
+    create_folder()
+
+    with open(monitor_file_path, 'w') as f:
+        f.write("run")
+
+    print("PIV run started")
+
+def confidence_loop():
+    global running
+    while running:
+        score = confidence_model()
+        print(f"Confidence = {score:.2f}")
+        if score >= CONFIDENCE_THRESHOLD:
+            start_piv_process()#Might need to change this process to fit automation needs currently stops whole process and views results
+        time.sleep(1)
+
+@app.route('/start_auto_piv', methods=['POST'])
+@login_required
+def start_auto_piv():
+    global running, thread
+    if not running:
+        running = True
+        thread = threading.Thread(target=confidence_loop, daemon=True)
+        thread.start()
+    return jsonify({"status": "started"})
+
+@app.route('/stop_auto_piv', methods=['POST'])
+@login_required
+def stop_auto_piv():
+    global running
+    running = False
+    return jsonify({"status": "stopped"})
+
+#Devin Changes
+"""# --- Goodness-based auto loop control ---
 
 START_AT = 80   # start capturing when score >= this
 STOP_AT  = 78   # stop capturing when score < this
@@ -2707,7 +2763,7 @@ def api_goodness():
         'capturing': IS_CAPTURING,
         'start_at': START_AT,
         'stop_at': STOP_AT
-    })
+    })"""
 
 
 if __name__ == "__main__":
