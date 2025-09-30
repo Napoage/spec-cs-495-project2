@@ -2684,7 +2684,7 @@ def confidence_loop():
         print(f"Confidence = {score:.2f}")
         if score >= CONFIDENCE_THRESHOLD:
             start_piv_process()#Might need to change this process to fit automation needs currently stops whole process and views results
-        time.sleep(1)
+        time.sleep(30)
 
 @app.route('/start_auto_piv', methods=['POST'])
 @login_required
