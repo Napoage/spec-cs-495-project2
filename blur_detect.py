@@ -48,6 +48,42 @@ def check_exposure(image):
 
     return dark_pixels, bright_pixels, clipped_black, clipped_white
 
+def generate_score(frame_count,  sharp_frames, avg_variance, overall_dark_count, overall_bright_count, clipped_black_count, clipped_white_count):
+
+    sharp_frames_percentage = sharp_frames / frame_count
+    overall_dark_percentage = overall_dark_count / frame_count
+    overall_bright_percentage = overall_bright_count / frame_count
+    clipped_black_percentage = clipped_black_count / frame_count
+    clipped_white_percentage = clipped_white_count / frame_count
+
+    sharp_frames_score = sharp_frames_percentage * 16.666666666
+
+    if avg_variance >= 2500:
+        variance_score = 16.666666666
+    else:
+        variance_score = (avg_variance / 2500) * 16.666666666
+    
+    bright_frames_score = (1 - overall_bright_percentage) * 16.666666666
+    dark_frames_score = (1 - overall_dark_percentage) * 16.666666666
+    clipped_black_score = (1 - clipped_black_percentage) * 16.666666666
+    clipped_white_score = (1 - clipped_white_percentage) * 16.666666666
+
+    if sharp_frames_percentage < 0.3:
+        total_score = 0
+    elif variance_score < 5:
+        total_score = 0
+    elif overall_dark_percentage > .6:
+        total_score = 0
+    elif overall_bright_percentage > .6: 
+        total_score = 0
+    elif clipped_black_percentage > .5:  
+        total_score = 0
+    elif clipped_white_percentage > .5:
+        total_score = 0
+    else:
+        total_score = sharp_frames_score + variance_score + bright_frames_score + dark_frames_score + clipped_black_score + clipped_white_score
+    
+    return total_score
 
 def process_video(video_path, threshold=1000.0):
     """
@@ -84,7 +120,7 @@ def process_video(video_path, threshold=1000.0):
         frame_count += 1
 
         # Resize the frame for faster processing (optional)
-        frame = cv2.resize(frame, (200, 140))
+        #frame = cv2.resize(frame, (640, 480))
 
         # Check if the frame is blurry
         _, blurry, variance = is_blurry(frame, threshold=threshold)
@@ -138,9 +174,11 @@ def process_video(video_path, threshold=1000.0):
     print(f"Overall bright frames: {overall_bright_count} ({overall_bright_count/frame_count*100:.1f}%)")
     print(f"Clipped black frames: {clipped_black_count} ({clipped_black_count/frame_count*100:.1f}%)") 
     print(f"Clipped white frames: {clipped_white_count} ({clipped_white_count/frame_count*100:.1f}%)")
+    total_score = generate_score(frame_count, sharp_frames, avg_variance, overall_dark_count, overall_bright_count, clipped_black_count, clipped_white_count)
+    print(f"Overall video quality score (out of 100): {total_score:.2f}")
 
 
 video_path = (
-    r"Water Moving_darken_full.mp4"  # Replace with your video path
+    r"VideoAugmentation/ACS_blur_half.mp4"  # Replace with your video path
 )
 process_video(video_path, threshold=1250.0)
