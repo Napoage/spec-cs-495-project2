@@ -24,7 +24,49 @@ IMU_script="sudo python3 ${PARENT_DIR}/IMU/run_imu.py --unique-tag=IMUProcess"
 # Path to your config.json file
 CONFIG_FILE="${PARENT_DIR}/config.json"
 LOG_FILE="${PARENT_DIR}/script.log"
+VIDEO_FILE="${PARENT_DIR}/Water Moving.mp4"
 echo 'PIV SCRIPT STARTED'
+
+
+# Where to write the ledger
+PIV_CSV="${PARENT_DIR}/piv_results.csv"
+SAVE_DIR="${PARENT_DIR}/save_data"
+
+append_to_piv_results() {
+  # Find the newest *_PIV_output folder and log its parent "run folder"
+  # Works on systems with GNU coreutils
+  local latest_output_dir
+  latest_output_dir=$(find "$SAVE_DIR" -type d -name "*_PIV_output" -printf "%T@ %p\n" 2>/dev/null | sort -nr | head -n1 | awk '{ $1=""; sub(/^ /,""); print }')
+
+  local run_folder=""
+  if [ -n "$latest_output_dir" ]; then
+    run_folder="$(dirname "$latest_output_dir")"
+  fi
+
+  local ts
+  ts=$(date -Iseconds)
+
+  # Create the CSV with header if it doesn't exist
+  if [ ! -f "$PIV_CSV" ]; then
+    echo "timestamp,run_folder,status" > "$PIV_CSV"
+  fi
+
+  echo "$ts,$(printf "%s" "$run_folder"),completed" >> "$PIV_CSV"
+}
+
+capture_frames() {
+  # If your test video exists, use ffmpeg to turn it into frames
+  if [ -f "$VIDEO_FILE" ]; then
+    echo "Using file source: $VIDEO_FILE"
+    ffmpeg -hide_banner -loglevel error -y -i "$VIDEO_FILE" \
+      -vf "fps=1/${frame_interval},scale=${width}:${height}" \
+      -t "${duration}" \
+      "${PARENT_DIR}/raw_frames/%06d.jpg" || return 1
+  else
+    # Otherwise, use your existing GStreamer routine
+    run_gst_launch || return 1
+  fi
+}
 
 
 mkdir -p "${PARENT_DIR}/raw_frames"
@@ -70,8 +112,8 @@ while true; do
       rm -f ${PARENT_DIR}/raw_frames/*
 
       # Run gst-launch with infinite retry mechanism
-      if ! run_gst_launch; then
-        echo "Unexpected error in run_gst_launch function"
+      if ! capture_frames; then
+        echo "Unexpected error in capture_frames function"
         cleanup
         continue  # Continue the main loop instead of exiting
       fi
@@ -90,6 +132,7 @@ while true; do
       # Process images
       python3 ${PARENT_DIR}/PIV/preprocess_frames.py
       python3 ${PARENT_DIR}/PIV/call_PIV_lab.py
+      append_to_piv_results
       rm -f ${PARENT_DIR}/images/*
       rm -f ${PARENT_DIR}/raw_frames/*
       > "$LOG_FILE"
