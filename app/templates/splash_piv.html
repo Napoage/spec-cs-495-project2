@@ -175,13 +175,12 @@
             <!--<button onclick="location.href='/logout'">Logout</button>-->
             
             <!--Test Confidence model intervals-->
-            <form action="{{ url_for('start_auto_piv') }}" method="post">
-                <button type="submit">Start Auto PIV</button>
-            </form>
+            <button onclick="document.getElementById('startAutoPIVForm').submit();">Start Auto PIV</button>
+            <form id="startAutoPIVForm" method="POST" action="{{ url_for('start_auto_piv') }}" style="display: none;"></form>
 
-            <form action="{{ url_for('stop_auto_piv') }}" method="post">
-                <button type="submit">Stop Auto PIV</button>
-            </form>
+            <button onclick="document.getElementById('stopAutoPIVForm').submit();">Stop Auto PIV</button>
+            <form id="stopAutoPIVForm" method="POST" action="{{ url_for('stop_auto_piv') }}" style="display: none;"></form>
+
 
 
         </div>

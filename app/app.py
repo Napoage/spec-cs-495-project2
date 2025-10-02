@@ -2677,6 +2677,68 @@ def start_piv_process():
 
     print("PIV run started")
 
+def wait_for_piv_completion(timeout=1200):
+    """
+    Wait for PIV processing to complete by monitoring for new CSV files.
+    
+    Args:
+        timeout (int): Maximum time to wait in seconds (default: 1200 = 20 minutes)
+    
+    Returns:
+        bool: True if completion detected, False if timeout
+    """
+    start_time = time.time()
+    initial_csv_exists = os.path.exists('piv_results.csv')
+    initial_mod_time = 0
+    
+    if initial_csv_exists:
+        initial_mod_time = os.path.getmtime('piv_results.csv')
+    
+    print(f"Waiting for PIV completion (timeout: {timeout}s)...")
+    
+    while time.time() - start_time < timeout:
+        try:
+            # Check if PIV is still running by reading monitor file
+            piv_running = False
+            try:
+                with open(monitor_file_path, "r") as file:
+                    content = file.read().strip()
+                    piv_running = (content == "run")
+            except FileNotFoundError:
+                piv_running = False
+            
+            # If PIV stopped running, check for new data
+            if not piv_running:
+                if os.path.exists('piv_results.csv'):
+                    current_mod_time = os.path.getmtime('piv_results.csv')
+                    
+                    # Check if file was modified after we started waiting
+                    if current_mod_time > initial_mod_time:
+                        # Additional check: file should be recent (within last 2 minutes)
+                        if time.time() - current_mod_time < 120:
+                            print("PIV completion detected - new CSV data found")
+                            return True
+                
+                # If no new data but PIV stopped, wait a bit more in case file is still being written
+                time.sleep(10)
+                
+                # Check again after waiting
+                if os.path.exists('piv_results.csv'):
+                    current_mod_time = os.path.getmtime('piv_results.csv')
+                    if current_mod_time > initial_mod_time and time.time() - current_mod_time < 120:
+                        print("PIV completion detected - new CSV data found (after wait)")
+                        return True
+            
+            # Check every 5 seconds while PIV is running
+            time.sleep(5)
+            
+        except Exception as e:
+            print(f"Error while waiting for PIV completion: {str(e)}")
+            time.sleep(10)
+    
+    print("PIV completion timeout reached")
+    return False
+
 def confidence_loop():
     global running
     while running:
@@ -2684,7 +2746,11 @@ def confidence_loop():
         print(f"Confidence = {score:.2f}")
         if score >= CONFIDENCE_THRESHOLD:
             start_piv_process()#Might need to change this process to fit automation needs currently stops whole process and views results
-        time.sleep(30)
+            if wait_for_piv_completion():
+                print("PIV completed successfully - new data available")
+            else:
+                print("PIV completion timeout - may need investigation")
+        time.sleep(1)
 
 @app.route('/start_auto_piv', methods=['POST'])
 @login_required
