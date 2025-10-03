@@ -181,8 +181,14 @@ def process_video(video_path, threshold=1000.0):
     total_score = generate_score(frame_count, sharp_frames, avg_variance, overall_dark_count, overall_bright_count, clipped_black_count, clipped_white_count, FRAME_SKIP)
     print(f"Overall video quality score (out of 100): {total_score:.2f}")
 
+    return total_score
 
-video_path = (
-    r"VideoAugmentation/ACS.MP4"  # Replace with your video path
-)
-process_video(video_path, threshold=1250.0)
+if __name__ == "__main__":
+    video_path = r"VideoAugmentation/ACS_lighten_full.mp4"
+    process_video(video_path, threshold=1250.0)
+
+# link quality score to PIV result
+# table of quality score and accuracy of PIV
+
+# review: team is making good progress, in correct direction. great job.
+
