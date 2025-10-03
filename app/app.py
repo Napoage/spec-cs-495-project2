@@ -811,21 +811,6 @@ def plot_vectors_mag(data: dict, uScale: np.ndarray, vScale: np.ndarray,
     plt.close()
 
 
-# --- Minimal: start run_PIV.sh watcher once on boot ---
-WATCHER_PROC = None
-
-def start_watcher_once():
-    global WATCHER_PROC
-    if WATCHER_PROC and (WATCHER_PROC.poll() is None):
-        return
-    try:
-        # BASE_DIR already points to your "main" folder
-        WATCHER_PROC = subprocess.Popen(['bash', 'run_PIV.sh'], cwd=BASE_DIR)
-        app.logger.info(f"run_PIV.sh watcher started (pid={WATCHER_PROC.pid})")
-    except Exception as e:
-        app.logger.exception(f"Failed to start run_PIV.sh: {e}")
-
-
 def create_folder():
     """
     Create a new folder with a timestamp, add an entry to the configuration file, 
@@ -2847,5 +2832,4 @@ def stop_auto_piv():
 if __name__ == "__main__":
     #start imu thread then the app
     start_imu_thread()
-    start_watcher_once()
     app.run(host='0.0.0.0', threaded=True)
