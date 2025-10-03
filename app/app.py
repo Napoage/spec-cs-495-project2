@@ -2717,10 +2717,12 @@ running = False
 thread = None
 CONFIDENCE_THRESHOLD = 0.8
 
+"""
 def confidence_model():
     score = random.random()
     print("Confidence model generated score: ", score)
     return score
+"""
 
 def start_piv_process():
     """Core logic for starting the PIV process, safe to call anywhere."""
@@ -2799,22 +2801,40 @@ def wait_for_piv_completion(timeout=1200):
     print("PIV completion timeout reached")
     return False
 
+from blur_detect import process_video
 def confidence_loop():
+    """
+    Loop that periodically checks video confidence and starts PIV if threshold exceeded.
+    Runs in a separate thread.
+    1. Captures video frames and computes confidence score.
+    2. If score exceeds CONFIDENCE_THRESHOLD, initiates PIV process.
+    """
     global running
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    video_path = os.path.join(BASE_DIR, "..", "Water Moving Slow.mp4")
+    video_path = os.path.abspath(video_path)
+
     while running:
-        score = confidence_model()
-        print(f"Confidence = {score:.2f}")
+        score = process_video(video_path, threshold=300.0)
+        print(f"Confidence = {score}")
         if score >= CONFIDENCE_THRESHOLD:
             start_piv_process()#Might need to change this process to fit automation needs currently stops whole process and views results
             if wait_for_piv_completion():
                 print("PIV completed successfully - new data available")
             else:
                 print("PIV completion timeout - may need investigation")
-        time.sleep(1)
+        time.sleep(10)
 
 @app.route('/start_auto_piv', methods=['POST'])
 @login_required
 def start_auto_piv():
+    """
+    Starts the automatic PIV process in a background thread.
+    If already running, does nothing.
+    1. Sets running flag to True.
+    2. Starts confidence_loop in a daemon thread.
+    3. Returns JSON status.
+    """
     global running, thread
     if not running:
         running = True
@@ -2825,6 +2845,10 @@ def start_auto_piv():
 @app.route('/stop_auto_piv', methods=['POST'])
 @login_required
 def stop_auto_piv():
+    """
+    Stops the automatic PIV process.
+    1. Sets running flag to False.
+    """
     global running
     running = False
     return jsonify({"status": "stopped"})
