@@ -24,6 +24,7 @@ IMU_script="sudo python3 ${PARENT_DIR}/IMU/run_imu.py --unique-tag=IMUProcess"
 # Path to your config.json file
 CONFIG_FILE="${PARENT_DIR}/config.json"
 LOG_FILE="${PARENT_DIR}/script.log"
+VIDEO_PATH="${PARENT_DIR}/Water Moving Slow.mp4"
 echo 'PIV SCRIPT STARTED'
 
 
@@ -31,6 +32,22 @@ mkdir -p "${PARENT_DIR}/raw_frames"
 
 # load gstreamer run_gst_launch() function
 source $PARENT_DIR/common_functions.sh
+
+capture_frames_from_video() {
+  local video="$1"
+  local framerate="$2"   # frames per second (can be decimal)
+  local width="$3"
+  local height="$4"
+
+  echo "Extracting frames from video: $video"
+  rm -f "${PARENT_DIR}/raw_frames/"* 2>/dev/null || true
+
+  # ffmpeg: sample at the desired FPS and resize to your reduced resolution
+  ffmpeg -hide_banner -loglevel error -y \
+    -i "$video" \
+    -vf "fps=${framerate},scale=${width}:${height}:flags=lanczos" \
+    "${PARENT_DIR}/raw_frames/%06d.jpg"
+}
 
 # Main loop to watch monitor_file.txt and run PIV calculations continuously
 while true; do
@@ -70,10 +87,22 @@ while true; do
       rm -f ${PARENT_DIR}/raw_frames/*
 
       # Run gst-launch with infinite retry mechanism
-      if ! capture_frames; then
-        echo "Unexpected error in capture_frames function"
-        cleanup
-        continue  # Continue the main loop instead of exiting
+      # Run capture (camera OR video) with infinite retry behavior similar to before
+      if [[ -n "$VIDEO_PATH" && -f "$VIDEO_PATH" ]]; then
+        # Use the same values you read from config.json
+        framerate=$(printf "%.6f" $(bc -l <<< "1/$frame_interval"))
+        capture_frames_from_video "$VIDEO_PATH" "$framerate" "$width" "$height" || {
+          echo "Unexpected error extracting frames from video"
+          cleanup
+          continue
+        }
+      else
+        # Original camera path
+        if ! capture_frames; then
+          echo "Unexpected error in capture_frames function"
+          cleanup
+          continue
+        fi
       fi
 
       # safety check to make sure raw_frames is populated

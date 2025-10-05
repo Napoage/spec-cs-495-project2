@@ -332,7 +332,7 @@ def process_images(frame_queue, stop_event):
 
                 # Save the processed frame with the index as the filename
                 if processed_frame is not None:
-                    img_name = f"final_frame_{index}.jpg"
+                    img_name = f"frame_{index:03d}.png"
                     img_path_out = os.path.join(SUPER_PATH, img_name)
                     cv2.imwrite(img_path_out, processed_frame)
 
@@ -383,7 +383,7 @@ class ImageHandler:
         """
         Starts a thread that captures frames from the video stream.
         """
-        loading_thread = threading.Thread(target=self._image_loading())
+        loading_thread = threading.Thread(target=self._image_loading)
         loading_thread.start()
         # loading_thread.join()
 
