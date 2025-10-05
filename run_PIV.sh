@@ -24,7 +24,6 @@ IMU_script="sudo python3 ${PARENT_DIR}/IMU/run_imu.py --unique-tag=IMUProcess"
 # Path to your config.json file
 CONFIG_FILE="${PARENT_DIR}/config.json"
 LOG_FILE="${PARENT_DIR}/script.log"
-DONE_STAMP="${PARENT_DIR}/piv_done.stamp"
 VIDEO_PATH="${PARENT_DIR}/Water_Moving.mp4"
 echo 'PIV SCRIPT STARTED'
 
@@ -65,7 +64,6 @@ while true; do
         site_piv_break=15
       fi
 
-      rm -f "$DONE_STAMP" 2>/dev/null || true
       frame_interval=$(jq -r '.frameInterval' "$CONFIG_FILE")
       duration=$(jq -r '.capture_time' "$CONFIG_FILE")
       width=$(jq -r '.reduced_image_width' "$CONFIG_FILE")
@@ -124,7 +122,6 @@ while true; do
       python3 ${PARENT_DIR}/PIV/preprocess_frames.py
       python3 ${PARENT_DIR}/PIV/call_PIV_lab.py
       python3 ${PARENT_DIR}/visualize_csv_data.py || echo "visualize_csv_data failed"
-      date -Is > "$DONE_STAMP"
       rm -f ${PARENT_DIR}/images/*
       rm -f ${PARENT_DIR}/raw_frames/*
       > "$LOG_FILE"
