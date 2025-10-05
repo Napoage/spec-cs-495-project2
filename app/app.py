@@ -160,6 +160,8 @@ class VideoStreamHandler:
 #Set up all global variables
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.dirname(CURRENT_DIR)
+RUNNER_PATH = os.path.join(BASE_DIR, "run_PIV.sh")
+RUNNER_LOG  = os.path.join(BASE_DIR, "script.log") 
 
 # Flask app
 with open(f"credentials.json",'r') as cred:
@@ -424,6 +426,32 @@ def get_trapezoid(angle):
 
     # Update global current_points with the new trapezoid
     current_points = top_right, top_left, bottom_left, bottom_right
+
+
+import signal
+
+def ensure_piv_runner():
+    """Start run_PIV.sh if it's not already running."""
+    try:
+        # already running?
+        rc = subprocess.run(
+            ["pgrep", "-f", RUNNER_PATH],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        ).returncode
+        if rc == 0:
+            return  # it's up
+
+        # start it (no sudo, logs to script.log)
+        logf = open(RUNNER_LOG, "ab", buffering=0)
+        subprocess.Popen(
+            ["bash", RUNNER_PATH],
+            cwd=BASE_DIR,
+            stdout=logf,
+            stderr=logf,
+            preexec_fn=os.setsid  # its own process group
+        )
+    except Exception as e:
+        print(f"Failed to start run_PIV.sh: {e}")
 
 
 def dewarp_frame(frame):
@@ -2725,7 +2753,7 @@ def confidence_model():
 """
 
 def start_piv_process():
-    """Core logic for starting the PIV process, safe to call anywhere."""
+    """Start run_PIV.sh (if needed) and tell it to run once. No waiting here."""
     with open(MAIN_CONFIG, 'r') as cf:
         config = json.load(cf)
     config["last Calibrated"] = datetime.now().strftime("%m-%d-%y")
@@ -2733,74 +2761,76 @@ def start_piv_process():
         json.dump(config, f, indent=4)
 
     create_folder()
-    set_new_run_dir()    
+    set_new_run_dir()
 
-    with open(monitor_file_path, 'w') as f:
+    ensure_piv_runner()                     # make sure the script is alive
+    with open(monitor_file_path, 'w') as f: # nudge it
         f.write("run")
 
-    print("PIV run started")
+    print("PIV run started (non-blocking)")
 
-def wait_for_piv_completion(timeout=1200):
+
+def wait_for_piv_completion(timeout=1200, quiet_secs=3):
     """
-    Wait for PIV processing to complete by monitoring for new CSV files.
-    
-    Args:
-        timeout (int): Maximum time to wait in seconds (default: 1200 = 20 minutes)
-    
-    Returns:
-        bool: True if completion detected, False if timeout
+    Detect completion by seeing any new, stable CSV under the current_data_directory
+    (from save.json) modified after this function started. No dependency on the
+    monitor file flipping to 'stop' and no done-stamp required.
     """
-    start_time = time.time()
-    initial_csv_exists = os.path.exists('piv_results.csv')
-    initial_mod_time = 0
-    
-    if initial_csv_exists:
-        initial_mod_time = os.path.getmtime('piv_results.csv')
-    
-    print(f"Waiting for PIV completion (timeout: {timeout}s)...")
-    
-    while time.time() - start_time < timeout:
+    start = time.time()
+
+    # Get the run dir your set_new_run_dir() just wrote
+    try:
+        with open(SAVE_CONFIG, "r") as f:
+            s = json.load(f)
+        run_dir = s.get("current_data_directory")
+    except Exception:
+        run_dir = None
+
+    if not run_dir or not os.path.isdir(run_dir):
+        print(f"wait_for_piv_completion: invalid run_dir: {run_dir}")
+        return False
+
+    print(f"Waiting for PIV completion in {run_dir} (timeout: {timeout}s)...")
+
+    last_sizes = {}  # path -> (mtime, size) to check stability
+
+    while time.time() - start < timeout:
         try:
-            # Check if PIV is still running by reading monitor file
-            piv_running = False
-            try:
-                with open(monitor_file_path, "r") as file:
-                    content = file.read().strip()
-                    piv_running = (content == "run")
-            except FileNotFoundError:
-                piv_running = False
-            
-            # If PIV stopped running, check for new data
-            if not piv_running:
-                if os.path.exists('piv_results.csv'):
-                    current_mod_time = os.path.getmtime('piv_results.csv')
-                    
-                    # Check if file was modified after we started waiting
-                    if current_mod_time > initial_mod_time:
-                        # Additional check: file should be recent (within last 2 minutes)
-                        if time.time() - current_mod_time < 120:
-                            print("PIV completion detected - new CSV data found")
-                            return True
-                
-                # If no new data but PIV stopped, wait a bit more in case file is still being written
-                time.sleep(10)
-                
-                # Check again after waiting
-                if os.path.exists('piv_results.csv'):
-                    current_mod_time = os.path.getmtime('piv_results.csv')
-                    if current_mod_time > initial_mod_time and time.time() - current_mod_time < 120:
-                        print("PIV completion detected - new CSV data found (after wait)")
-                        return True
-            
-            # Check every 5 seconds while PIV is running
-            time.sleep(5)
-            
+            found_stable_new_csv = False
+
+            for path in glob.glob(os.path.join(run_dir, "**", "*.csv"), recursive=True):
+                try:
+                    mtime = os.path.getmtime(path)
+                    size  = os.path.getsize(path)
+                except OSError:
+                    continue
+
+                # Only consider files created/updated after we started waiting
+                if mtime < start:
+                    continue
+
+                prev = last_sizes.get(path)
+                last_sizes[path] = (mtime, size)
+
+                # A file is “stable” if it hasn’t changed for quiet_secs
+                if (time.time() - mtime) >= quiet_secs:
+                    # If we haven't seen it before or its tuple hasn't changed, treat as stable
+                    if not prev or prev == (mtime, size):
+                        print(f"PIV completion detected via CSV: {path}")
+                        found_stable_new_csv = True
+                        break
+
+            if found_stable_new_csv:
+                return True
+
         except Exception as e:
-            print(f"Error while waiting for PIV completion: {str(e)}")
-            time.sleep(10)
-    
+            print(f"wait_for_piv_completion error: {e}")
+
+        time.sleep(1.5)
+
     print("PIV completion timeout reached")
     return False
+
 
 from blur_detect import process_video
 def confidence_loop():
@@ -2820,10 +2850,7 @@ def confidence_loop():
         print(f"Confidence = {score}")
         if score >= CONFIDENCE_THRESHOLD:
             start_piv_process()#Might need to change this process to fit automation needs currently stops whole process and views results
-            if wait_for_piv_completion():
-                print("PIV completed successfully - new data available")
-            else:
-                print("PIV completion timeout - may need investigation")
+            print("PIV completion timeout - may need investigation")
         time.sleep(10)
 
 
