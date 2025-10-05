@@ -3,7 +3,6 @@ import sys
 
 sys.path.append(".")
 from ensemble_PIV import ensemble_piv
-import numpy as np
 import json
 import cv2
 import os
@@ -218,9 +217,10 @@ def call_pivlab(stack, piv_params, save_config, BASE_DIR):
     print(f"PIVout saved as {output_filename}")
 
     # Move imu data to config/run directory used
-    save_config_directory = save_config.get('config_folder')
-    imu_data_original = os.path.join(BASE_DIR, 'save_data',
-                                    save_config_directory, 'imu_data.txt')
+    cfg_dir = save_config.get('config_folder', '')
+    if not os.path.isabs(cfg_dir):
+        cfg_dir = os.path.join(BASE_DIR, cfg_dir)
+    imu_data_original = os.path.join(cfg_dir, 'imu_data.txt')
     imu_data_new = os.path.join(directory, f'{time_stamp}_imu_data.txt')
     shutil.move(imu_data_original, imu_data_new)
 
@@ -262,15 +262,23 @@ def main():
     config = load_config(config_path)
 
     # Compile regex pattern for sorting image files
-    pattern = re.compile(r'final_frame_(\d+)\.jpg')
+    pattern = re.compile(r'frame_(\d+)\.png')
 
     # Load and sort images
     image_directory = os.path.join(BASE_DIR, 'images')
     preproc_arrays = get_filepaths(image_directory, pattern)
 
-    # Load mask
-    mask_path = os.path.join(BASE_DIR, 'app', config.get('mask_path', ''))
-    mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
+    # Minimal mask handling: if mask == "no" or missing, use all-valid mask
+    sample = cv2.imread(preproc_arrays[0], cv2.IMREAD_GRAYSCALE)
+    H, W = sample.shape[:2]
+    if str(config.get('mask', 'no')).lower() == 'yes':
+        mask_path = os.path.join(BASE_DIR, 'app', config.get('mask_path', ''))
+        mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
+        if mask is None:
+            mask = np.full((H, W), 255, dtype=np.uint8)
+    else:
+        mask = np.full((H, W), 255, dtype=np.uint8)
+        
 
     print(preproc_arrays)
 
