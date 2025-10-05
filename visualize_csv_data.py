@@ -180,7 +180,6 @@ def visualize_piv_csv():
     print(f"• High-speed areas: {(df['velocity_magnitude'] > df['velocity_magnitude'].quantile(0.8)).sum()} vectors")
     print(f"• Low correlation: {(df['correlation'] < 0.1).sum()} vectors ({100*(df['correlation'] < 0.1).sum()/len(df):.1f}%)")
 
-    plt.show()
     return df
 
 if __name__ == "__main__":
