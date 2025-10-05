@@ -2812,11 +2812,11 @@ def confidence_loop():
     """
     global running
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    video_path = os.path.join(BASE_DIR, "..", "Water Moving Slow.mp4")
+    video_path = os.path.join(BASE_DIR, "..", "Water_Moving.mp4")
     video_path = os.path.abspath(video_path)
 
     while running:
-        score = process_video(video_path, threshold=300.0)
+        score = process_video(video_path, threshold=300.0) / 100.0
         print(f"Confidence = {score}")
         if score >= CONFIDENCE_THRESHOLD:
             start_piv_process()#Might need to change this process to fit automation needs currently stops whole process and views results

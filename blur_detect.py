@@ -59,7 +59,7 @@ def generate_score(frame_count,  sharp_frames, avg_variance, overall_dark_count,
     WEIGHT = 100 / 6
 
     sharp_frames_score = sharp_frames_percentage * WEIGHT
-    variance_score = min(avg_variance / 2500, 1.0) * WEIGHT
+    variance_score = min(avg_variance / 1000, 1.0) * WEIGHT
     bright_frames_score = (1 - overall_bright_percentage) * WEIGHT
     dark_frames_score = (1 - overall_dark_percentage) * WEIGHT
     clipped_black_score = (1 - clipped_black_percentage) * WEIGHT
@@ -67,7 +67,7 @@ def generate_score(frame_count,  sharp_frames, avg_variance, overall_dark_count,
 
     if sharp_frames_percentage < 0.3:
         total_score = 0
-    elif variance_score < 5:
+    elif variance_score < 2:
         total_score = 0
     elif overall_dark_percentage > .6:
         total_score = 0
