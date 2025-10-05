@@ -2812,7 +2812,7 @@ def confidence_loop():
     """
     global running
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    video_path = os.path.join(BASE_DIR, "..", "Water_Moving.mp4")
+    video_path = os.path.join(BASE_DIR, "..", "Water Moving Slow.mp4")
     video_path = os.path.abspath(video_path)
 
     while running:
@@ -2824,7 +2824,7 @@ def confidence_loop():
                 print("PIV completed successfully - new data available")
             else:
                 print("PIV completion timeout - may need investigation")
-        time.sleep(1)
+        time.sleep(10)
 
 
 def set_new_run_dir():

@@ -24,7 +24,7 @@ IMU_script="sudo python3 ${PARENT_DIR}/IMU/run_imu.py --unique-tag=IMUProcess"
 # Path to your config.json file
 CONFIG_FILE="${PARENT_DIR}/config.json"
 LOG_FILE="${PARENT_DIR}/script.log"
-VIDEO_PATH="${PARENT_DIR}/Water_Moving.mp4"
+VIDEO_PATH="${PARENT_DIR}/Water Moving Slow.mp4"
 echo 'PIV SCRIPT STARTED'
 
 
