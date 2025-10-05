@@ -197,7 +197,7 @@ def call_pivlab(stack, piv_params, save_config, BASE_DIR):
     directory = save_config.get('current_data_directory')
     time_stamp = os.path.basename(directory)
     output_filename = os.path.join(directory, f'{time_stamp}_PIV_output')
-    os.mkdir(output_filename)
+    os.makedirs(output_filename, exist_ok=True)
 
     PIVout = {
         'xPiv': x_piv,  # Velocity x position 

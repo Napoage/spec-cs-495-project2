@@ -87,9 +87,12 @@ while true; do
 
       cleanup
 
+
+      export MPLBACKEND=Agg
       # Process images
       python3 ${PARENT_DIR}/PIV/preprocess_frames.py
       python3 ${PARENT_DIR}/PIV/call_PIV_lab.py
+      python3 ${PARENT_DIR}/visualize_csv_data.py || echo "visualize_csv_data failed"
       rm -f ${PARENT_DIR}/images/*
       rm -f ${PARENT_DIR}/raw_frames/*
       > "$LOG_FILE"

@@ -2733,6 +2733,7 @@ def start_piv_process():
         json.dump(config, f, indent=4)
 
     create_folder()
+    set_new_run_dir()    
 
     with open(monitor_file_path, 'w') as f:
         f.write("run")
@@ -2824,6 +2825,28 @@ def confidence_loop():
             else:
                 print("PIV completion timeout - may need investigation")
         time.sleep(10)
+
+
+def set_new_run_dir():
+    """
+    Create a fresh piv_results/<timestamp> folder and store it in save.json
+    so PIV/call_PIV_lab.py writes outputs there.
+    """
+    root = os.path.dirname(os.path.abspath(__file__))  # app/
+    root = os.path.dirname(root)                       # repo root
+    ts = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    run_dir = os.path.join(root, "piv_results", ts)
+    os.makedirs(run_dir, exist_ok=True)
+
+    save_path = os.path.join(root, "save.json")
+    with open(save_path, "r") as f:
+        s = json.load(f)
+    s["current_data_directory"] = run_dir
+    with open(save_path, "w") as f:
+        json.dump(s, f, indent=2)
+
+    return run_dir
+
 
 @app.route('/start_auto_piv', methods=['POST'])
 @login_required
