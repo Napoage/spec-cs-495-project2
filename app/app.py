@@ -2851,7 +2851,7 @@ def confidence_loop():
         if score >= CONFIDENCE_THRESHOLD:
             start_piv_process()#Might need to change this process to fit automation needs currently stops whole process and views results
             print("PIV completion timeout - may need investigation")
-        time.sleep(10)
+        time.sleep(120)
 
 
 def set_new_run_dir():
