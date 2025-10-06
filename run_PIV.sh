@@ -25,13 +25,29 @@ IMU_script="sudo python3 ${PARENT_DIR}/IMU/run_imu.py --unique-tag=IMUProcess"
 CONFIG_FILE="${PARENT_DIR}/config.json"
 LOG_FILE="${PARENT_DIR}/script.log"
 VIDEO_PATH="${PARENT_DIR}/Water_Moving.mp4"
-echo 'PIV SCRIPT STARTED'
+# --- logging & safety (add these) ---
+touch "$LOG_FILE"                          # clear log each fresh start
+exec > >(tee -a "$LOG_FILE") 2>&1          # send stdout/stderr to script.log
+set -Eeuo pipefail                         # fail fast on errors
+echo "$(date -Is) PIV SCRIPT STARTED"
 
 
 mkdir -p "${PARENT_DIR}/raw_frames"
 
 # load gstreamer run_gst_launch() function
 source $PARENT_DIR/common_functions.sh
+
+
+cleanup_run() {
+  if declare -F cleanup >/dev/null; then
+    cleanup || true
+  fi
+  if [[ "${IMU_PID:-}" =~ ^[0-9]+$ ]]; then
+    kill "${IMU_PID}" 2>/dev/null || true
+  fi
+}
+trap cleanup_run EXIT INT TERM
+
 
 capture_frames_from_video() {
   local video="$1"
@@ -60,8 +76,8 @@ while true; do
 
       # Validate site_piv_break
       if [[ ! "$site_piv_break" =~ ^[0-9]+$ ]]; then
-        echo "Invalid site_piv_break value. Defaulting to 15 minutes."
-        site_piv_break=15
+        echo "Invalid site_piv_break value. Defaulting to 1 minute."
+        site_piv_break=1
       fi
 
       frame_interval=$(jq -r '.frameInterval' "$CONFIG_FILE")
@@ -124,12 +140,14 @@ while true; do
       python3 ${PARENT_DIR}/visualize_csv_data.py || echo "visualize_csv_data failed"
       rm -f ${PARENT_DIR}/images/*
       rm -f ${PARENT_DIR}/raw_frames/*
-      > "$LOG_FILE"
       # Calculate next scheduled run
+      
       current_time=$(date +%s)
       next_run_time=$(( (current_time / (site_piv_break * 60) + 1) * (site_piv_break * 60) ))
       sleep_time=$((next_run_time - current_time))
 
+      echo "Cycle complete at $(date -Is)"
+      echo "Sleeping ${sleep_time}s (until $(date -d @$next_run_time -Is))"
       echo "Sleeping until $(date -d @$next_run_time)..."
       sleep "$sleep_time"
       
