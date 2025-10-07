@@ -1,0 +1,50 @@
+{
+    "trapezoid_points": [
+        [
+            1920,
+            0
+        ],
+        [
+            0,
+            0
+        ],
+        [
+            0,
+            107080
+        ],
+        [
+            1920,
+            0
+        ]
+    ],
+    "pixSize": "0.03",
+    "frameInterval": "0.1",
+    "minvel": "0.01",
+    "maxvel": "5.0",
+    "stdThresh": "4.0",
+    "medianFilt": "1.5",
+    "infillFlag": 1,
+    "smoothFlag": 1,
+    "idealresolution": "1",
+    "mask": "yes",
+    "mask_path": "",
+    "site_name": "Site 1",
+    "site_id": "1",
+    "site_location": "Here",
+    "sensor_height": "1",
+    "site_operator": "You",
+    "site_comments": "Notes about site can be entered here   ",
+    "site_piv_break": "15",
+    "last Calibrated": "",
+    "focal_length": "3.2",
+    "cmos_sensor_height": "3.14",
+    "cmos_sensor_width": "5.8",
+    "max_image_width": "3840",
+    "max_image_height": "2160",
+    "reduced_image_width": "1920",
+    "reduced_image_height": "1080",
+    "full_res_pixel_size": ".00145",
+    "reduced_res_camera_pixel_size": "0.002900",
+    "capture_time": "10",
+    "f_from_calib_matrix": ""
+}

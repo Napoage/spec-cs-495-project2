@@ -15,7 +15,7 @@
 cleanup() {
     echo "Stopping IMU process..."
     # Kill the IMU process
-    sudo pkill -f "run_imu.py"
+    run_sudo pkill -f "run_imu.py"
     echo "IMU process stopped."
 }
 
@@ -203,10 +203,10 @@ enable_rtc_charging() {
             echo "Adding charging parameter to config.txt"
 
             # Backup config file
-            sudo cp "$CONFIG_PATH" "${CONFIG_PATH}.backup"
+            run_sudo cp "$CONFIG_PATH" "${CONFIG_PATH}.backup"
 
             # Add charging parameter
-            echo "$CHARGING_PARAM" | sudo tee -a "$CONFIG_PATH"
+            echo "$CHARGING_PARAM" | run_sudo tee -a "$CONFIG_PATH"
 
             echo "Charging parameter added. A reboot is required for changes to take effect."
             return 2  # Return code 2 indicates reboot needed
