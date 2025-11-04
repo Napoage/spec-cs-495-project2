@@ -19,15 +19,11 @@
 # Monitor file to watch
 #PARENT_DIR='/home/spec/spec'
 PARENT_DIR="$(cd "$(dirname "$0")" && pwd)"
-monitor_file="${PARENT_DIR}/monitor_file.txt"
 IMU_script="sudo python3 ${PARENT_DIR}/IMU/run_imu.py --unique-tag=IMUProcess"
 # Path to your config.json file
 CONFIG_FILE="${PARENT_DIR}/config.json"
-LOG_FILE="${PARENT_DIR}/script.log"
 VIDEO_PATH="${PARENT_DIR}/Water_Moving.mp4"
 # --- logging & safety (add these) ---
-touch "$LOG_FILE"                          # clear log each fresh start
-exec > >(tee -a "$LOG_FILE") 2>&1          # send stdout/stderr to script.log
 set -Eeuo pipefail                         # fail fast on errors
 echo "$(date -Is) PIV SCRIPT STARTED"
 
@@ -65,101 +61,74 @@ capture_frames_from_video() {
     "${PARENT_DIR}/raw_frames/%06d.jpg"
 }
 
-# Main loop to watch monitor_file.txt and run PIV calculations continuously
-while true; do
-  if [ -f "$monitor_file" ]; then
-    file_content=$(cat "$monitor_file")
 
-    if [ "$file_content" == "run" ]; then
-      # Read site_piv_break on each run in case it's updated
-      site_piv_break=$(jq -r '.site_piv_break' "$CONFIG_FILE")
+frame_interval=$(jq -r '.frameInterval' "$CONFIG_FILE")
+duration=$(jq -r '.capture_time' "$CONFIG_FILE")
+width=$(jq -r '.reduced_image_width' "$CONFIG_FILE")
+height=$(jq -r '.reduced_image_height' "$CONFIG_FILE")
 
-      # Validate site_piv_break
-      if [[ ! "$site_piv_break" =~ ^[0-9]+$ ]]; then
-        echo "Invalid site_piv_break value. Defaulting to 1 minute."
-        site_piv_break=1
-      fi
+if [ -z "$frame_interval" ] || [ -z "$duration" ]; then
+echo "Error: Could not retrieve frameInterval or duration."
+exit 1
+fi
 
-      frame_interval=$(jq -r '.frameInterval' "$CONFIG_FILE")
-      duration=$(jq -r '.capture_time' "$CONFIG_FILE")
-      width=$(jq -r '.reduced_image_width' "$CONFIG_FILE")
-      height=$(jq -r '.reduced_image_height' "$CONFIG_FILE")
+# Run IMU
+echo "Running IMU command"
+$IMU_script &
+IMU_PID=$!
 
-      if [ -z "$frame_interval" ] || [ -z "$duration" ]; then
-        echo "Error: Could not retrieve frameInterval or duration."
-        exit 1
-      fi
+framerate=$(printf "%.0f" $(bc -l <<< "1/$frame_interval"))
+echo "Starting process with framerate ${framerate}/1 for ${duration} seconds..."
 
-      # Run IMU
-      echo "Running IMU command"
-      $IMU_script &
-      IMU_PID=$!
+# clearing any existing raw_frames
+echo "Clearing old frames..."
+rm -f ${PARENT_DIR}/raw_frames/*
 
-      framerate=$(printf "%.0f" $(bc -l <<< "1/$frame_interval"))
-      echo "Starting process with framerate ${framerate}/1 for ${duration} seconds..."
-
-      # clearing any existing raw_frames
-      echo "Clearing old frames..."
-      rm -f ${PARENT_DIR}/raw_frames/*
-
-      # Run gst-launch with infinite retry mechanism
-      # Run capture (camera OR video) with infinite retry behavior similar to before
-      if [[ -n "$VIDEO_PATH" && -f "$VIDEO_PATH" ]]; then
-        # Use the same values you read from config.json
-        framerate=$(printf "%.6f" $(bc -l <<< "1/$frame_interval"))
-        capture_frames_from_video "$VIDEO_PATH" "$framerate" "$width" "$height" || {
-          echo "Unexpected error extracting frames from video"
-          cleanup
-          continue
-        }
-      else
-        # Original camera path
-        if ! capture_frames; then
-          echo "Unexpected error in capture_frames function"
-          cleanup
-          continue
-        fi
-      fi
-
-      # safety check to make sure raw_frames is populated
-      if [ ! $(ls -al ${PARENT_DIR}/raw_frames | wc -l) -ge $duration ]; then
-        echo "Error, no raw frames detected! Retrying..."
-        cleanup
-        continue  # Continue the main loop instead of exiting
-      else
-        echo "raw frames detected, proceeding."
-      fi
-
-      cleanup
-
-
-      export MPLBACKEND=Agg
-      # Process images
-      python3 ${PARENT_DIR}/PIV/preprocess_frames.py
-      python3 ${PARENT_DIR}/PIV/call_PIV_lab.py
-      python3 ${PARENT_DIR}/visualize_csv_data.py || echo "visualize_csv_data failed"
-      rm -f ${PARENT_DIR}/images/*
-      rm -f ${PARENT_DIR}/raw_frames/*
-      # Calculate next scheduled run
-      
-      current_time=$(date +%s)
-      next_run_time=$(( (current_time / (site_piv_break * 60) + 1) * (site_piv_break * 60) ))
-      sleep_time=$((next_run_time - current_time))
-
-      echo "Cycle complete at $(date -Is)"
-      echo "Sleeping ${sleep_time}s (until $(date -d @$next_run_time -Is))"
-      echo "Sleeping until $(date -d @$next_run_time)..."
-      sleep "$sleep_time"
-      
-    elif [ "$file_content" == "stop" ]; then
-      echo "Stopped. Checking again in 5 seconds..."
-      sleep 5
-    else
-      echo "Unknown command. Waiting..."
-      sleep 5
-    fi
-  else
-    echo "Monitor file not found. Waiting..."
-    sleep 5
+# Run gst-launch with infinite retry mechanism
+# Run capture (camera OR video) with infinite retry behavior similar to before
+if [[ -n "$VIDEO_PATH" && -f "$VIDEO_PATH" ]]; then
+# Use the same values you read from config.json
+framerate=$(printf "%.6f" $(bc -l <<< "1/$frame_interval"))
+capture_frames_from_video "$VIDEO_PATH" "$framerate" "$width" "$height" || {
+  echo "Unexpected error extracting frames from video"
+  cleanup
+  exit 1
+}
+else
+# Original camera path
+  if ! capture_frames; then
+    echo "Unexpected error in capture_frames function"
+    cleanup
+    exit 1
   fi
-done
+fi
+
+# safety check to make sure raw_frames is populated
+frame_count=$(find "${PARENT_DIR}/raw_frames" -type f \( -name '*.jpg' -o -name '*.png' \) | wc -l | awk '{print $1}')
+if [[ "${frame_count}" -lt 1 ]]; then
+  echo "Error: no raw frames detected in ${PARENT_DIR}/raw_frames"
+  cleanup
+  exit 1
+fi
+
+echo "raw frames detected (${frame_count}), proceeding."
+echo "Error, no raw frames detected! Retrying..."
+cleanup
+exit 1
+
+else
+echo "raw frames detected, proceeding."
+fi
+
+cleanup
+exit 1
+
+export MPLBACKEND=Agg
+# Process images
+python3 ${PARENT_DIR}/PIV/preprocess_frames.py
+python3 ${PARENT_DIR}/PIV/call_PIV_lab.py
+python3 ${PARENT_DIR}/visualize_csv_data.py || echo "visualize_csv_data failed"
+rm -f ${PARENT_DIR}/images/*
+rm -f ${PARENT_DIR}/raw_frames/*
+echo "One-shot PIV run complete at $(date -Is)"
+exit 0
