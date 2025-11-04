@@ -302,7 +302,7 @@
                 showModal("✅ Auto PIV Loop Started!");
                 break;
             case "threshold_crossed":
-                showModal("⚠️ Threshold reached. PIV may need to run.");
+                showModal("⚠️ Threshold reached. PIV Process Starting");
                 break;
             case "PIV Started":
                 showModal("📡 PIV Run Started!");
@@ -312,6 +312,9 @@
                 break;
             case "auto_piv_stopped":
                 showModal("🛑 Auto PIV Loop Stopped.");
+                break;
+            case "PIV Completed":
+                showModal("PIV Completed");
                 break;
             }
         });

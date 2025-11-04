@@ -2872,6 +2872,7 @@ def confidence_loop():
             event_queue.put("threshold_crossed")
             start_piv_process()#Might need to change this process to fit automation needs currently stops whole process and views results
             print("PIV completion timeout - may need investigation")
+            event_queue.put("PIV Completed")
         time.sleep(120)
 
 def set_new_run_dir():
@@ -2931,6 +2932,7 @@ def events():
             event = event_queue.get()  # waits until event exists
             yield f"data: {event}\n\n"
             if event == "auto_piv_stopped":
+                time.sleep(20)
                 break
 
     return Response(stream_with_context(event_stream()), mimetype="text/event-stream")
