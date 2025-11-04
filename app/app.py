@@ -431,36 +431,24 @@ def get_trapezoid(angle):
 import signal
 
 def ensure_piv_runner():
-    """Start run_PIV.sh if it's not already running (uses PID file from the script)."""
+    """Start run_PIV.sh if it's not already running."""
     try:
-        pidfile = os.path.join(BASE_DIR, ".run_piv.pid")
-        # If the PID file exists and the PID is alive, do nothing
-        if os.path.exists(pidfile):
-            try:
-                with open(pidfile, "r") as f:
-                    pid = int(f.read().strip() or "0")
-                if pid > 0:
-                    os.kill(pid, 0)  # raises OSError if not running
-                    return
-            except Exception:
-                pass  # stale pid file -> we'll start a new one
-
-        # Fallback check with pgrep (robust if PID file went missing)
+        # already running?
         rc = subprocess.run(
             ["pgrep", "-f", RUNNER_PATH],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
         ).returncode
         if rc == 0:
-            return  # already up
+            return  # it's up
 
-        # Start it and let the script write its own PID file
+        # start it (no sudo, logs to script.log)
         logf = open(RUNNER_LOG, "ab", buffering=0)
         subprocess.Popen(
             ["bash", RUNNER_PATH],
             cwd=BASE_DIR,
             stdout=logf,
             stderr=logf,
-            preexec_fn=os.setsid
+            preexec_fn=os.setsid  # its own process group
         )
     except Exception as e:
         print(f"Failed to start run_PIV.sh: {e}")
@@ -883,11 +871,6 @@ def create_folder():
         json.dump(config, f, indent=4)
 
     shutil.copy(MAIN_CONFIG, os.path.join(new_folder_path, 'config.json'))
-    shutil.copy(MAIN_CONFIG, os.path.join(new_folder_path, 'config.json'))
-
-    # NEW: ensure a blank IMU file exists for demo / no-IMU mode
-    open(os.path.join(new_folder_path, 'imu_data.txt'), 'a').close()
-
     with open(MAIN_CONFIG, 'r') as cf:
         config = json.load(cf)
     try:
