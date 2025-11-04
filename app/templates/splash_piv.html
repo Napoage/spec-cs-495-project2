@@ -142,12 +142,70 @@
                 max-width: 200px; /* Optional: limit maximum button width */
             }
         }
+        /*added content here*/
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4); /* Dim background */
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            width: 350px;
+            text-align: center;
+            font-size: 18px;
+            box-shadow: 0px 4px 12px rgba(0,0,0,0.2);
+            animation: popup 0.25s ease-out;
+        }
+
+        .modal-buttons {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .modal-buttons button {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .modal-buttons button:hover {
+            background-color: #0064d4;
+        }
+
+        @keyframes popup {
+            from { transform: scale(0.85); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
     </style>
 </head>
 <body>
     {% if g.process_running %}
         <div class="banner">PIV Process is running</div>
     {% endif %}
+    <div id="customModal" class="modal">
+        <div class="modal-content">
+            <p id="modalMessage"></p>
+            <div class="modal-buttons">
+                <button id="modalOkBtn">OK</button>
+            </div>
+        </div>
+    </div>
     <div class="spacer"></div>
     <div class="logo">
         <img src="{{ url_for('static', filename='images/SPEC_logo.png') }}" alt="Logo" style="width: 120%; height: auto; border-radius: 10px; ">
@@ -173,11 +231,14 @@
             <!--<button onclick="location.href='/logout'">Logout</button>-->
             
             <!--Test Confidence model intervals-->
-            <button onclick="document.getElementById('startAutoPIVForm').submit();">Start Auto PIV</button>
+            <!--<button onclick="document.getElementById('startAutoPIVForm').submit();">Start Auto PIV</button>
             <form id="startAutoPIVForm" method="POST" action="{{ url_for('start_auto_piv') }}" style="display: none;"></form>
 
             <button onclick="document.getElementById('stopAutoPIVForm').submit();">Stop Auto PIV</button>
-            <form id="stopAutoPIVForm" method="POST" action="{{ url_for('stop_auto_piv') }}" style="display: none;"></form>
+            <form id="stopAutoPIVForm" method="POST" action="{{ url_for('stop_auto_piv') }}" style="display: none;"></form>-->
+
+            <button id="startAutoPIVBtn">Start Auto PIV</button>
+            <button id="stopAutoPIVBtn">Stop Auto PIV</button>
 
 
 
@@ -221,6 +282,53 @@
         if (errorMessage) {
             alert(decodeURIComponent(errorMessage));  // Display the decoded error message in a pop-up
         }
+
+        const eventSource = new EventSource("/events");
+
+        function showModal(message) {
+            document.getElementById("modalMessage").innerText = message;
+            document.getElementById("customModal").style.display = "flex";
+        }
+
+        document.getElementById("modalOkBtn").addEventListener("click", () => {
+        document.getElementById("customModal").style.display = "none";
+        });
+
+        eventSource.addEventListener("message", (event) => {
+        console.log("Event received:", event.data);
+
+        switch (event.data) {
+            case "auto_piv_started":
+                showModal("✅ Auto PIV Loop Started!");
+                break;
+            case "threshold_crossed":
+                showModal("⚠️ Threshold reached. PIV may need to run.");
+                break;
+            case "PIV Started":
+                showModal("📡 PIV Run Started!");
+                break;
+            case "PIV Finished":
+                showModal("🟢 PIV Complete!");
+                break;
+            case "auto_piv_stopped":
+                showModal("🛑 Auto PIV Loop Stopped.");
+                break;
+            }
+        });
+
+
+        document.getElementById("startAutoPIVBtn").addEventListener("click", async () => {
+            const res = await fetch("/start_auto_piv", { method: "POST" });
+            const data = await res.json();
+            console.log(data);
+        });
+
+        document.getElementById("stopAutoPIVBtn").addEventListener("click", async () => {
+            const res = await fetch("/stop_auto_piv", { method: "POST" });
+            const data = await res.json();
+            console.log(data);
+        });
+        
     </script>
 </body>
 </html>

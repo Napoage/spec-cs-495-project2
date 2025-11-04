@@ -2771,6 +2771,7 @@ def confidence_model():
 
 def start_piv_process():
     """Start run_PIV.sh (if needed) and tell it to run once. No waiting here."""
+    event_queue.put("PIV Started")
     with open(MAIN_CONFIG, 'r') as cf:
         config = json.load(cf)
     config["last Calibrated"] = datetime.now().strftime("%m-%d-%y")
@@ -2849,6 +2850,8 @@ def wait_for_piv_completion(timeout=1200, quiet_secs=3):
     return False
 
 
+import queue
+event_queue = queue.Queue()
 from blur_detect import process_video
 def confidence_loop():
     """
@@ -2861,27 +2864,27 @@ def confidence_loop():
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     video_path = os.path.join(BASE_DIR, "..", "Water_Moving.mp4")
     video_path = os.path.abspath(video_path)
-
+    event_queue.put("auto_piv_started")
     while running:
         score = process_video(video_path, threshold=300.0) / 100.0
         print(f"Confidence = {score}")
         if score >= CONFIDENCE_THRESHOLD:
+            event_queue.put("threshold_crossed")
             start_piv_process()#Might need to change this process to fit automation needs currently stops whole process and views results
             print("PIV completion timeout - may need investigation")
         time.sleep(120)
-
 
 def set_new_run_dir():
     """
     Create a fresh piv_results/<timestamp> folder and store it in save.json
     so PIV/call_PIV_lab.py writes outputs there.
     """
+
     root = os.path.dirname(os.path.abspath(__file__))  # app/
     root = os.path.dirname(root)                       # repo root
     ts = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     run_dir = os.path.join(root, "piv_results", ts)
     os.makedirs(run_dir, exist_ok=True)
-
     save_path = os.path.join(root, "save.json")
     with open(save_path, "r") as f:
         s = json.load(f)
@@ -2918,7 +2921,19 @@ def stop_auto_piv():
     """
     global running
     running = False
+    event_queue.put("auto_piv_stopped")
     return jsonify({"status": "stopped"})
+
+@app.route('/events')
+def events():
+    def event_stream():
+        while True:
+            event = event_queue.get()  # waits until event exists
+            yield f"data: {event}\n\n"
+            if event == "auto_piv_stopped":
+                break
+
+    return Response(stream_with_context(event_stream()), mimetype="text/event-stream")
 
 if __name__ == "__main__":
     #start imu thread then the app
