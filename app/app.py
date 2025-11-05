@@ -2863,7 +2863,7 @@ def run_sanity_check(results_path):
     """
         This function will take the piv results and call several functions from sanity_check.py to determine if the
         results are good or bad. These results will be outputted to the users
-        
+
         Inputs: 
             string: path to piv results
         Outputs: 
@@ -2892,6 +2892,8 @@ def run_sanity_check(results_path):
         print("Center is faster than edges (GOOD)")
     else:
         print("Center is not faster than edges (BAD)")
+
+    event_queue.put("Sanity Check Completed")
 
 def set_new_run_dir():
     """
