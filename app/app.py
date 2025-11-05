@@ -2832,7 +2832,7 @@ def wait_for_piv_completion(timeout=1200, quiet_secs=3):
     print("PIV completion timeout reached")
     return False
 
-
+import sanity_check
 import queue
 event_queue = queue.Queue()
 from blur_detect import process_video
@@ -2856,8 +2856,32 @@ def confidence_loop():
             start_piv_process()#Might need to change this process to fit automation needs currently stops whole process and views results
             print("PIV completion timeout - may need investigation")
             event_queue.put("PIV Completed")
+            run_sanity_check('../piv_results.csv')
         time.sleep(120)
+def run_sanity_check(results_path):
+    df = pd.read_csv(results_path)
 
+    spatial_outliers = sanity_check.find_spatial_outliers(df, distance_threshold=40, velocity_diff_threshold=.1)
+    print("**********Spatial Consistency Check**********")
+    print(f"Number of spatial outliers: {len(spatial_outliers)}")
+    print(f"Percentage of spatial outliers: {len(spatial_outliers)/len(df)*100:.1f}%")
+    print("")
+
+    consistent_flow, directional_outliers = sanity_check.check_flow_direction(df, angle_threshold=25)
+    print("**********Flow Direction Consistency Check**********")
+    print(f"Number of directional outliers: {len(directional_outliers)}")
+    print(f"Percentage of vectors within 25° of median flow direction: {consistent_flow:.2f}%")
+    print("")
+
+    avg_center_velocity, avg_edge_velocity = sanity_check.check_velocity_profile(df, edge_zone_percent=.2)
+    print("**********Velocity Profile Check**********")
+    print(f"Average center velocity: {avg_center_velocity:.3f}")
+    print(f"Average edge velocity: {avg_edge_velocity:.3f}")
+    print(f"Ratio (center/edge): {avg_center_velocity/avg_edge_velocity:.2f}")
+    if avg_center_velocity > avg_edge_velocity:
+        print("Center is faster than edges (GOOD)")
+    else:
+        print("Center is not faster than edges (BAD)")
 def set_new_run_dir():
     """
     Create a fresh piv_results/<timestamp> folder and store it in save.json
