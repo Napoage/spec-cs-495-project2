@@ -2858,7 +2858,17 @@ def confidence_loop():
             event_queue.put("PIV Completed")
             run_sanity_check('../piv_results.csv')
         time.sleep(120)
+
 def run_sanity_check(results_path):
+    """
+        This function will take the piv results and call several functions from sanity_check.py to determine if the
+        results are good or bad. These results will be outputted to the users
+        
+        Inputs: 
+            string: path to piv results
+        Outputs: 
+            None
+    """
     df = pd.read_csv(results_path)
 
     spatial_outliers = sanity_check.find_spatial_outliers(df, distance_threshold=40, velocity_diff_threshold=.1)
@@ -2882,6 +2892,7 @@ def run_sanity_check(results_path):
         print("Center is faster than edges (GOOD)")
     else:
         print("Center is not faster than edges (BAD)")
+
 def set_new_run_dir():
     """
     Create a fresh piv_results/<timestamp> folder and store it in save.json
