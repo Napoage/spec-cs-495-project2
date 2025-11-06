@@ -2913,10 +2913,12 @@ def run_sanity_check(results_path):
     print(f"Ratio (center/edge): {avg_center_velocity/avg_edge_velocity:.2f}")
     if avg_center_velocity > avg_edge_velocity:
         print("Center is faster than edges (GOOD)")
+        event_queue.put({"event": "Sanity Check Completed",
+                     "sanity_check": "Center is faster than edges (GOOD)"})
     else:
         print("Center is not faster than edges (BAD)")
-    #TODO add sanity check data
-    event_queue.put({"event": "Sanity Check Completed"})
+        event_queue.put({"event": "Sanity Check Completed",
+                     "sanity_check": "Center is not faster than edges (BAD)"})
     time.sleep(5)
 
 def set_new_run_dir():

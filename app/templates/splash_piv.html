@@ -328,7 +328,8 @@
                 showModal("PIV Completed");
                 break;
             case "Sanity Check Completed":
-                showModal("Sanity Check Completed");
+                const sanity_check = parsed.sanity_check !== undefined ? parsed.sanity_check : "N/A"
+                showModal("Sanity Check Completed: \n" + sanity_check);
                 break;
             }
         });
