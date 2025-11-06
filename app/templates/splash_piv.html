@@ -296,22 +296,33 @@
 
         eventSource.addEventListener("message", (event) => {
         console.log("Event received:", event.data);
-
-        switch (event.data) {
+        let parsed;
+        try {
+            parsed = JSON.parse(event.data);
+        } catch {
+            console.warn("Non-JSON event:", event.data);
+            return;
+        }
+        switch (parsed.event) {
             case "auto_piv_started":
                 showModal("✅ Auto PIV Loop Started!");
                 break;
             case "threshold_crossed":
-                showModal("⚠️ Threshold reached. PIV Process Starting");
+                const confidence = parsed.score !== undefined ? parsed.score.toFixed(2) : "N/A";
+                showModal(`Threshold reached. PIV Process Starting\nConfidence: ${confidence}`);
                 break;
             case "PIV Started":
                 showModal("📡 PIV Run Started!");
+                break;
+            case "video_not_found":
+                showModal("Video Not Found. Change Video Path.");
                 break;
             case "PIV Finished":
                 showModal("🟢 PIV Complete!");
                 break;
             case "auto_piv_stopped":
                 showModal("🛑 Auto PIV Loop Stopped.");
+                evtSource.close();
                 break;
             case "PIV Completed":
                 showModal("PIV Completed");

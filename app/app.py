@@ -2754,7 +2754,8 @@ def confidence_model():
 
 def start_piv_process():
     """Start run_PIV.sh (if needed) and tell it to run once. No waiting here."""
-    event_queue.put("PIV Started")
+    #event_queue.put("PIV Started")
+    #time.sleep(5)
     with open(MAIN_CONFIG, 'r') as cf:
         config = json.load(cf)
     config["last Calibrated"] = datetime.now().strftime("%m-%d-%y")
@@ -2794,7 +2795,7 @@ def wait_for_piv_completion(timeout=1200, quiet_secs=3):
     print(f"Waiting for PIV completion in {run_dir} (timeout: {timeout}s)...")
 
     last_sizes = {}  # path -> (mtime, size) to check stability
-
+    count = 0
     while time.time() - start < timeout:
         try:
             found_stable_new_csv = False
@@ -2823,7 +2824,9 @@ def wait_for_piv_completion(timeout=1200, quiet_secs=3):
 
             if found_stable_new_csv:
                 return True
-
+    
+            print("Still Here" + str(count))
+            count += 1
         except Exception as e:
             print(f"wait_for_piv_completion error: {e}")
 
@@ -2844,25 +2847,40 @@ def confidence_loop():
     2. If score exceeds CONFIDENCE_THRESHOLD, initiates PIV process.
     """
     global running
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    video_path = os.path.join(BASE_DIR, "..", "Water_Moving.mp4")
-    video_path = os.path.abspath(video_path)
-    event_queue.put("auto_piv_started")
-    while running:
-        score = process_video(video_path, threshold=300.0) / 100.0
-        print(f"Confidence = {score}")
-        if score >= CONFIDENCE_THRESHOLD:
-            event_queue.put("threshold_crossed")
-            start_piv_process()
 
-            if wait_for_piv_completion(timeout=1200, quiet_secs=3):
-                print("PIV run completed successfully")
-                event_queue.put("PIV Completed")
-                run_sanity_check('../piv_results.csv')
-            else:
-                print("PIV completion timeout - may need investigation")
-                event_queue.put("PIV Timeout")
-        time.sleep(120)
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    video_path = os.path.join(BASE_DIR, "..", "Water Moving Slow.mp4")
+    video_path = os.path.abspath(video_path)
+    if not os.path.exists(video_path):
+        print("Video file not found")
+        #TODO add to frontend
+        event_queue.put({"event":"video_not_found"})
+    else:
+        event_queue.put({"event":"auto_piv_started"})
+        time.sleep(10)
+        while running:
+            score = process_video(video_path, threshold=300.0) / 100.0
+            print(f"Confidence = {score}")
+            if score >= CONFIDENCE_THRESHOLD:
+                #TODO add threshold data
+                event_queue.put({
+                    "event": "threshold_crossed",
+                    "score": score
+                })
+                time.sleep(10)
+                start_piv_process()
+
+                if wait_for_piv_completion(timeout=10, quiet_secs=3):
+                    print("PIV run completed successfully")
+                    event_queue.put({"event": "PIV Completed"})
+                    time.sleep(5)
+                    run_sanity_check('../piv_results.csv')
+                else:
+                    print("PIV completion timeout - may need investigation")
+                    event_queue.put({"event": "PIV Timeout"})
+                    time.sleep(5)
+                    run_sanity_check('../piv_results.csv')
+            time.sleep(120)
 
 def run_sanity_check(results_path):
     """
@@ -2897,8 +2915,9 @@ def run_sanity_check(results_path):
         print("Center is faster than edges (GOOD)")
     else:
         print("Center is not faster than edges (BAD)")
-
-    event_queue.put("Sanity Check Completed")
+    #TODO add sanity check data
+    event_queue.put({"event": "Sanity Check Completed"})
+    time.sleep(5)
 
 def set_new_run_dir():
     """
@@ -2947,7 +2966,7 @@ def stop_auto_piv():
     """
     global running
     running = False
-    event_queue.put("auto_piv_stopped")
+    event_queue.put({"event": "auto_piv_stopped"})
     return jsonify({"status": "stopped"})
 
 @app.route('/events')
@@ -2955,7 +2974,7 @@ def events():
     def event_stream():
         while True:
             event = event_queue.get()  # waits until event exists
-            yield f"data: {event}\n\n"
+            yield f"data: {json.dumps(event)}\n\n"
             if event == "auto_piv_stopped":
                 time.sleep(20)
                 break
