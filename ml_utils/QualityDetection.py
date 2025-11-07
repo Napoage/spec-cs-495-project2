@@ -179,11 +179,11 @@ def results(passed, failed, raindrops, stats, REJECT_THRESHOLD):
     
 def main():
     video_path = "Videos/ACS.MP4"
-    frame_id = "CRG"
+    frame_id = "ACS"
     frame_skip = 10
     reject_threshold = 0.5
-    syntheticRaindropAnalysis(frame_id, REJECT_THRESHOLD=reject_threshold)
-    #passVideoForTesting(video_path, FRAME_SKIP=frame_skip, REJECT_THRESHOLD=reject_threshold)
+    #syntheticRaindropAnalysis(frame_id, REJECT_THRESHOLD=reject_threshold)
+    passVideoForTesting(video_path, FRAME_SKIP=frame_skip, REJECT_THRESHOLD=reject_threshold)
 
 if __name__ == "__main__":
     main()
