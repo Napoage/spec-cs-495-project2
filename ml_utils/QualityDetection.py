@@ -17,6 +17,7 @@ import pandas as pd
 CNN_RESNET_MODEL_PATH = "Models/raindrop_classifier.pth"
 XGB_QUALITY_MODEL_PATH = "Models/BiggerDataset/xgb_quality_ACS.json"
 XGB_QUALITY_SCALER_PATH = "Models/BiggerDataset/scaler_ACS.joblib"
+RAINDROP_VARIANTS_DIR = "RaindropVariants"
 DEVICE = torch.device("cpu") # keep cpu because this needs to run on pi
 
 # resent model loading (resnet-18 CNN)
@@ -38,8 +39,8 @@ xgb_scaler = joblib.load(XGB_QUALITY_SCALER_PATH)
 
 # match transform from training (convert to pytorch tensor, resize, normalize colors)
 transform = transforms.Compose([
+    transforms.Resize((224, 224), antialias=True),
     transforms.ToTensor(),
-    transforms.Resize((224, 224), antialias=True),  # ResNet input size
     transforms.Normalize(mean=[0.485, 0.456, 0.406],
                          std=[0.229, 0.224, 0.225])
 ])
@@ -63,7 +64,8 @@ def extract_features(frame):
 
 def raindropDetection(frame):
     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB) # for pytorch (needs RGB)
-    img_tensor = transform(frame_rgb).unsqueeze(0).to(DEVICE)
+    frame_pil = Image.fromarray(frame_rgb)
+    img_tensor = transform(frame_pil).unsqueeze(0).to(DEVICE)
 
     with torch.no_grad(): # predict with CNN
         output = resnet_model(img_tensor)
@@ -124,9 +126,42 @@ def passVideoForTesting(video, FRAME_SKIP=10, REJECT_THRESHOLD=0.5):
     cap.release()
     #pbar.close()
 
-    passed = stats["passed_quality"]
-    failed = stats["failed_quality"]
-    raindrops = stats["raindrop_detected"]
+    results(stats["passed_quality"], stats["failed_quality"], stats["raindrop_detected"], stats, REJECT_THRESHOLD)
+    
+def syntheticRaindropAnalysis(frame_id, FRAME_SKIP=2, REJECT_THRESHOLD=0.5):
+    
+    frame_idx = 0
+    total_frames = 0
+    stats = {"passed_quality": 0, "failed_quality": 0, "raindrop_detected": 0}
+    
+    frames = sorted([
+        os.path.join(RAINDROP_VARIANTS_DIR, f)
+        for f in os.listdir(RAINDROP_VARIANTS_DIR)
+        if f.lower().endswith((".jpg", ".png", ".jpeg")) and frame_id.lower() in f.lower()
+    ])
+    
+    print(f"{len(frames)} found with videoID = {frame_id}")
+    
+    for frame in frames:
+        opened_frame = cv2.imread(frame)
+        if opened_frame is None:
+            frame_idx += 1
+            continue
+        if frame_idx % FRAME_SKIP == 0:
+            result = raindropDetection(opened_frame)
+            if result == 1:
+                stats["passed_quality"] += 1
+            elif result == 0:
+                stats["failed_quality"] += 1
+            elif result == -1:
+                stats["raindrop_detected"] += 1
+            total_frames += 1
+        frame_idx += 1
+            
+    results(stats["passed_quality"], stats["failed_quality"], stats["raindrop_detected"], stats, REJECT_THRESHOLD)
+
+def results(passed, failed, raindrops, stats, REJECT_THRESHOLD):
+    
     total = passed + failed + raindrops
 
     if total == 0:
@@ -141,12 +176,14 @@ def passVideoForTesting(video, FRAME_SKIP=10, REJECT_THRESHOLD=0.5):
         print(f"Video Rejected - Bad Frames: {(failed / total) * 100:.2f}%")
         
     print(stats)
-
+    
 def main():
     video_path = "Videos/ACS.MP4"
+    frame_id = "CRG"
     frame_skip = 10
     reject_threshold = 0.5
-    passVideoForTesting(video_path, FRAME_SKIP=frame_skip, REJECT_THRESHOLD=reject_threshold)
+    syntheticRaindropAnalysis(frame_id, REJECT_THRESHOLD=reject_threshold)
+    #passVideoForTesting(video_path, FRAME_SKIP=frame_skip, REJECT_THRESHOLD=reject_threshold)
 
 if __name__ == "__main__":
     main()

@@ -17,7 +17,7 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 DATA_CSV = os.path.join(OUTPUT_DIR, "metadata.csv")
 
 cfg = {
-    "minDrops": 8, "maxDrops": 30, "minR": 8, "maxR": 40, "return_label": False, "edge_darkratio": 1.8, "label_thres": 0.12
+    "minDrops": 8, "maxDrops": 30, "minR": 20, "maxR": 80, "return_label": False, "edge_darkratio": 1.8, "label_thres": 0.12
 }
 
 def main():
