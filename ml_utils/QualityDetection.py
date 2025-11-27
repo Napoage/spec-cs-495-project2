@@ -64,7 +64,7 @@ def extract_features(frame):
             saturation, clipped_black_ratio, clipped_white_ratio]
 
 
-# NEW: returns score for every frame
+# returns score for every frame
 def raindropDetection(frame):
     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     frame_pil = Image.fromarray(frame_rgb)
@@ -140,9 +140,10 @@ def passVideoForTesting(video, FRAME_SKIP=10, REJECT_THRESHOLD=0.5):
 
     cap.release()
 
-    results(stats["passed_quality"], stats["failed_quality"],
+    score = results(stats["passed_quality"], stats["failed_quality"],
             stats["raindrop_detected"], stats, REJECT_THRESHOLD)
-
+    
+    return score
 
 def syntheticRaindropAnalysis(frame_id, FRAME_SKIP=2, REJECT_THRESHOLD=0.5):
     frame_idx = 0
@@ -181,9 +182,10 @@ def syntheticRaindropAnalysis(frame_id, FRAME_SKIP=2, REJECT_THRESHOLD=0.5):
 
         frame_idx += 1
 
-    results(stats["passed_quality"], stats["failed_quality"],
+    score = results(stats["passed_quality"], stats["failed_quality"],
             stats["raindrop_detected"], stats, REJECT_THRESHOLD)
-
+    
+    return score
 
 def results(passed, failed, raindrops, stats, REJECT_THRESHOLD):
     total = passed + failed + raindrops
@@ -204,6 +206,8 @@ def results(passed, failed, raindrops, stats, REJECT_THRESHOLD):
 
     print(stats)
     print(f"\nAverage Frame Quality Score: {avg_score:.3f}")
+    
+    return avg_score
 
 
 def main():
@@ -212,9 +216,8 @@ def main():
     frame_skip = 10
     reject_threshold = 0.5
 
-    #syntheticRaindropAnalysis(frame_id, REJECT_THRESHOLD=reject_threshold)
-    passVideoForTesting(video_path, FRAME_SKIP=frame_skip, REJECT_THRESHOLD=reject_threshold)
-
+    #final_score = syntheticRaindropAnalysis(frame_id, REJECT_THRESHOLD=reject_threshold)
+    final_score = passVideoForTesting(video_path, FRAME_SKIP=frame_skip, REJECT_THRESHOLD=reject_threshold)
 
 if __name__ == "__main__":
     main()
