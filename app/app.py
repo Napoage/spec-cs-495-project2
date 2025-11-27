@@ -2835,7 +2835,8 @@ def wait_for_piv_completion(timeout=1200, quiet_secs=3):
 
 import queue
 event_queue = queue.Queue()
-from blur_detect import process_video
+#from blur_detect import process_video
+from QualityDetection import passVideoForTesting
 def confidence_loop():
     """
     Loop that periodically checks video confidence and starts PIV if threshold exceeded.
@@ -2845,13 +2846,13 @@ def confidence_loop():
     """
     global running
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    video_path = os.path.join(BASE_DIR, "..", "Water_Moving.mp4")
+    video_path = os.path.join(BASE_DIR, "../VideoAugmentation", "ACS.MP4")
     video_path = os.path.abspath(video_path)
     event_queue.put("auto_piv_started")
     while running:
-        score = process_video(video_path, threshold=300.0) / 100.0
+        score = passVideoForTesting(video_path, 10, 0.5)
         print(f"Confidence = {score}")
-        if score >= CONFIDENCE_THRESHOLD:
+        if score >= 0.4:
             event_queue.put("threshold_crossed")
             start_piv_process()
 
