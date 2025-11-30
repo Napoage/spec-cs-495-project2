@@ -2846,7 +2846,7 @@ def confidence_loop():
     """
     global running
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    video_path = os.path.join(BASE_DIR, "../ml_utils", "ACS.MP4")
+    video_path = os.path.join(BASE_DIR, "../VideoAugmentation", "ACS.MP4")
     video_path = os.path.abspath(video_path)
     event_queue.put("auto_piv_started")
     while running:
