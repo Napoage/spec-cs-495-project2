@@ -2836,7 +2836,7 @@ def wait_for_piv_completion(timeout=1200, quiet_secs=3):
 import queue
 event_queue = queue.Queue()
 #from blur_detect import process_video
-from QualityDetection import passVideoForTesting
+from ml_utils.QualityDetection import passVideoForTesting
 def confidence_loop():
     """
     Loop that periodically checks video confidence and starts PIV if threshold exceeded.
@@ -2851,6 +2851,9 @@ def confidence_loop():
     event_queue.put("auto_piv_started")
     while running:
         score = passVideoForTesting(video_path, 10, 0.5)
+        if score == None:
+            print("Video Not Loaded")
+            break
         print(f"Confidence = {score}")
         if score >= 0.4:
             event_queue.put("threshold_crossed")
