@@ -6,10 +6,34 @@ import sys
 sys.path.append("PIV")
 from ensemble_PIV import ensemble_piv
 
+def get_latest_sanity_status(log_path="app/sanity_flags.log"):
+    """Returns (timestamp, status) from the last line in the log file"""
+    try:
+        if not os.path.exists(log_path):
+            return None, "NO LOG FOUND"
+
+        with open(log_path, "r") as file:
+            lines = [line.strip() for line in file if line.strip()]
+
+        if not lines:
+            return None, "EMPTY LOG"
+
+        last_entry = lines[-1]   # most recent
+        timestamp, status = last_entry.split(" - ")
+
+        return timestamp, status.upper()
+
+    except Exception as e:
+        print(f"Error reading sanity log: {e}")
+        return None, "READ ERROR"
+
+
 def run_piv_with_visualization():
     """Run PIV analysis and create visualization of results"""
 
     print("Running PIV analysis with visualization...")
+    timestamp, sanity_status = get_latest_sanity_status()
+    print(f"Latest sanity status: {sanity_status} at {timestamp}")
 
     # Get image files
     image_dir = "images"
@@ -96,7 +120,7 @@ def run_piv_with_visualization():
 
         # Create visualization
         create_piv_visualization(img1, x_piv, y_piv, u_piv, v_piv,
-                               image_files[0], image_files[1])
+                               image_files[0], image_files[1], sanity_status, timestamp)
 
         print("PIV visualization complete!")
 
@@ -106,7 +130,7 @@ def run_piv_with_visualization():
         traceback.print_exc()
 
 def create_piv_visualization(background_img, x_piv, y_piv, u_piv, v_piv,
-                           img1_name, img2_name):
+                           img1_name, img2_name, sanity_status, timestamp):
     """Create and save PIV visualization"""
 
     plt.figure(figsize=(15, 10))
@@ -114,7 +138,19 @@ def create_piv_visualization(background_img, x_piv, y_piv, u_piv, v_piv,
     # Plot 1: Background image with velocity vectors
     plt.subplot(2, 2, 1)
     plt.imshow(background_img, cmap='gray')
+    status_color = "green" if sanity_status == "APPROVED" else "red"
 
+    plt.text(
+        0.01, 0.99,
+        f"SANITY STATUS: {sanity_status}\n{timestamp}",
+        transform=plt.gca().transAxes,
+        fontsize=14,
+        fontweight="bold",
+        va="top",
+        ha="left",
+        color=status_color,
+        bbox=dict(facecolor='black', alpha=0.6, pad=5)
+    )
     # Subsample vectors for cleaner visualization
     skip = max(1, len(x_piv[0]) // 20)  # Show every nth vector
 

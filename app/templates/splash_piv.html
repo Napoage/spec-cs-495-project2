@@ -248,106 +248,166 @@
         </div>
     </div>
     <script>
-        function cancelPIV() {
-            fetch('/cancel_piv', {
-                method: 'POST' // Sends a POST request to the /cancel_piv route
-            })
-            .then(response => response.json()) // Parse the JSON response from the server
-            .then(data => {
-                alert(data.message); // Show success message from the server
-                window.location.reload(); // Reload the page after cancellation
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while cancelling PIV.'); // Show an error message if the request fails
-            });
-        }  
-        // Function to handle saving data to USB without navigation
-        function saveToUSB() {
-            fetch('/save_to_usb', {
-                method: 'POST' // Adjust based on the route method configuration
-            })
-            .then(response => response.json()) // Assuming the server returns JSON
-            .then(data => {
-                alert(data.message); // Show a success or error message from the server response
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while saving to USB.');
-            });
-        }
-        // Check if there's an error message in the URL and decode it
-        const urlParams = new URLSearchParams(window.location.search);
-        const errorMessage = urlParams.get('error');
-        if (errorMessage) {
-            alert(decodeURIComponent(errorMessage));  // Display the decoded error message in a pop-up
-        }
+    function cancelPIV() {
+        fetch('/cancel_piv', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            window.location.reload();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while cancelling PIV.');
+        });
+    }  
 
-        const eventSource = new EventSource("/events");
+    function saveToUSB() {
+        fetch('/save_to_usb', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while saving to USB.');
+        });
+    }
 
-        function showModal(message) {
-            document.getElementById("modalMessage").innerText = message;
-            document.getElementById("customModal").style.display = "flex";
-        }
+    const urlParams = new URLSearchParams(window.location.search);
+    const errorMessage = urlParams.get('error');
+    if (errorMessage) {
+        alert(decodeURIComponent(errorMessage));
+    }
 
-        document.getElementById("modalOkBtn").addEventListener("click", () => {
+    const eventSource = new EventSource("/events");
+
+    /* ---------- MODAL FUNCTIONS ---------- */
+
+    function showModal(message) {
+        document.getElementById("modalMessage").innerText = message;
+        document.getElementById("customModal").style.display = "flex";
+    }
+
+    function showHTMLModal(html) {
+        document.getElementById("modalMessage").innerHTML = html;
+        document.getElementById("customModal").style.display = "flex";
+    }
+
+    document.getElementById("modalOkBtn").addEventListener("click", () => {
         document.getElementById("customModal").style.display = "none";
+    });
+
+    async function flagData(status) {
+        await fetch("/flag_sanity", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status })
         });
 
-        eventSource.addEventListener("message", (event) => {
+        document.getElementById("customModal").style.display = "none";
+        showModal(`✅ Marked as: ${status.toUpperCase()}`);
+    }
+
+    /* ---------- EVENT LISTENER ---------- */
+
+    eventSource.addEventListener("message", (event) => {
         console.log("Event received:", event.data);
         let parsed;
+
         try {
             parsed = JSON.parse(event.data);
         } catch {
             console.warn("Non-JSON event:", event.data);
             return;
         }
+
         switch (parsed.event) {
+
             case "auto_piv_started":
                 showModal("✅ Auto PIV Loop Started!");
                 break;
+
             case "threshold_crossed":
                 const confidence = parsed.score !== undefined ? parsed.score.toFixed(2) : "N/A";
                 showModal(`Threshold reached. PIV Process Starting\nConfidence: ${confidence}`);
                 break;
+
             case "PIV Started":
                 showModal("📡 PIV Run Started!");
                 break;
+
             case "video_not_found":
                 showModal("Video Not Found. Change Video Path.");
                 break;
+
             case "PIV Finished":
                 showModal("🟢 PIV Complete!");
                 break;
+
             case "auto_piv_stopped":
                 showModal("🛑 Auto PIV Loop Stopped.");
-                evtSource.close();
+                eventSource.close();
                 break;
+
             case "PIV Completed":
                 showModal("PIV Completed");
                 break;
-            case "Sanity Check Completed":
-                const sanity_check = parsed.sanity_check !== undefined ? parsed.sanity_check : "N/A"
-                showModal("Sanity Check Completed: \n" + sanity_check);
+
+            /* --------- NEW SANITY RESULTS VIEW ---------- */
+
+            case "sanity_results":
+
+                const html = `
+                    <h2>🧪 Sanity Report</h2>
+
+                    <p><strong>Status:</strong>
+                        <span style="color:${parsed.status === "GOOD" ? "green" : "red"}">
+                            ${parsed.status}
+                        </span>
+                    </p>
+
+                    <p><b>Spatial outliers:</b> 
+                        ${parsed.spatial_outliers} 
+                        (${parsed.spatial_percent?.toFixed(2)}%)
+                    </p>
+
+                    <p><b>Directional outliers:</b> ${parsed.directional_outliers}</p>
+
+                    <p><b>Flow consistency:</b> ${parsed.flow_consistency?.toFixed(2)}%</p>
+
+                    <p><b>Center velocity:</b> ${parsed.avg_center_velocity?.toFixed(4)}</p>
+
+                    <p><b>Edge velocity:</b> ${parsed.avg_edge_velocity?.toFixed(4)}</p>
+
+                    <p><b>Center / Edge ratio:</b> ${parsed.ratio?.toFixed(2)}</p>
+
+                    <div style="margin-top:15px;">
+                        <button onclick="flagData('approved')">✅ Approve</button>
+                        <button onclick="flagData('rejected')">🚩 Flag</button>
+                    </div>
+                `;
+
+                showHTMLModal(html);
                 break;
-            }
-        });
+        }
+    });
 
+    /* ---------- BUTTON HANDLERS ---------- */
 
-        document.getElementById("startAutoPIVBtn").addEventListener("click", async () => {
-            const res = await fetch("/start_auto_piv", { method: "POST" });
-            const data = await res.json();
-            console.log(data);
-        });
+    document.getElementById("startAutoPIVBtn").addEventListener("click", async () => {
+        const res = await fetch("/start_auto_piv", { method: "POST" });
+        const data = await res.json();
+        console.log(data);
+    });
 
-        document.getElementById("stopAutoPIVBtn").addEventListener("click", async () => {
-            const res = await fetch("/stop_auto_piv", { method: "POST" });
-            const data = await res.json();
-            console.log(data);
-        });
-        
-    </script>
+    document.getElementById("stopAutoPIVBtn").addEventListener("click", async () => {
+        const res = await fetch("/stop_auto_piv", { method: "POST" });
+        const data = await res.json();
+        console.log(data);
+    });
+
+</script>
+
 </body>
 </html>
 

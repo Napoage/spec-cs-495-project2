@@ -1458,6 +1458,36 @@ def data_visualization():
     """
     return render_template('data_visualization.html')
 
+@app.route('/get_latest_status')
+@login_required
+def get_latest_status():
+    log_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'app/sanity_flags.log')
+
+    if not os.path.exists(log_path):
+        return jsonify({"status": "Log file not found"}), 404
+
+    try:
+        with open(log_path, 'r') as f:
+            lines = f.readlines()
+
+        if not lines:
+            return jsonify({"status": "No log entries found"})
+
+        last_line = lines[-1].strip()
+
+        # Example: "2025-11-30 12:52:51.375470 - rejected"
+        parts = last_line.split(" - ")
+
+        timestamp = parts[0]
+        result = parts[1]
+
+        return jsonify({
+            "timestamp": timestamp,
+            "result": result
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/data_visualization/get_data')
 @login_required
@@ -2914,12 +2944,20 @@ def run_sanity_check(results_path):
     print(f"Ratio (center/edge): {avg_center_velocity/avg_edge_velocity:.2f}")
     if avg_center_velocity > avg_edge_velocity:
         print("Center is faster than edges (GOOD)")
-        event_queue.put({"event": "Sanity Check Completed",
-                     "sanity_check": "Center is faster than edges (GOOD)"})
+        status = "Good"
     else:
         print("Center is not faster than edges (BAD)")
-        event_queue.put({"event": "Sanity Check Completed",
-                     "sanity_check": "Center is not faster than edges (BAD)"})
+        status = "Bad"
+    event_queue.put({
+        "event": "sanity_results",
+        "spatial_outliers": len(spatial_outliers),
+        "spatial_percent": (len(spatial_outliers)/len(df))*100,
+        "directional_outliers": len(directional_outliers),
+        "flow_consistency": consistent_flow,
+        "avg_center_velocity": avg_center_velocity,
+        "avg_edge_velocity": avg_edge_velocity,
+        "status": status
+    })
     time.sleep(5)
 
 def set_new_run_dir():
@@ -2971,7 +3009,15 @@ def stop_auto_piv():
     running = False
     event_queue.put({"event": "auto_piv_stopped"})
     return jsonify({"status": "stopped"})
+@app.route("/flag_sanity", methods=["POST"])
+def flag_sanity():
+    data = request.json
+    status = data.get("status", "unknown")
 
+    with open("sanity_flags.log", "a") as f:
+        f.write(f"{datetime.now()} - {status}\n")
+
+    return jsonify({"message": "Flag saved"})
 @app.route('/events')
 def events():
     def event_stream():
