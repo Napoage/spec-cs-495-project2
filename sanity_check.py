@@ -3,6 +3,33 @@ import numpy as np
 
 
 def check_flow_direction(df, angle_threshold=20):
+    """
+    Analyze flow direction consistency by comparing vector angles to the median flow direction.
+
+    Calculates the angle of each velocity vector and determines what percentage of
+    vectors align within a specified angular threshold of the median flow direction.
+    Identifies outlier vectors that deviate significantly from the predominant flow.
+
+    Args:
+        df (pandas.DataFrame): DataFrame containing velocity data with 'u_velocity'
+            and 'v_velocity' columns representing horizontal and vertical velocity
+            components.
+        angle_threshold (float, optional): Maximum angular deviation (in degrees) from
+            the median flow direction for a vector to be considered consistent.
+            Defaults to 20.
+
+    Returns:
+        tuple ([float, pandas.DataFrame]): A tuple containing:
+            - consistent_flow (float): Percentage of vectors within the angle threshold
+            of the median flow direction (0-100).
+            - outliers (pandas.DataFrame): Subset of the input DataFrame containing only
+            vectors that exceed the angle threshold.
+
+    Notes:
+        - Adds 'angle' and 'angle_diff' columns to the input DataFrame
+        - Flow angles are calculated using arctan2(v_velocity, u_velocity)
+        - Angular differences account for circular nature of angles (wraps at 360°)
+    """
 
     #calculate flow angles (degrees)
     df['angle'] = np.degrees(np.arctan2(df['v_velocity'], df['u_velocity']))
@@ -30,7 +57,33 @@ def check_flow_direction(df, angle_threshold=20):
 
 
 def check_velocity_profile(df, edge_zone_percent=.2):
-    
+    """
+    Analyze velocity distribution across the flow field by comparing center and edge regions.
+
+    Divides the flow field into three horizontal regions (left edge, center, right edge)
+    and calculates average velocity magnitudes for the center versus the edges. This
+    helps identify boundary layer effects or non-uniform flow patterns.
+
+    Args:
+        df (pandas.DataFrame): DataFrame containing flow data with 'x_position' and
+            'velocity_magnitude' columns.
+        edge_zone_percent (float, optional): Fraction of the total horizontal range
+            to designate as edge zones on each side. For example, 0.2 means the left
+            20% and right 20% are edge zones, with the middle 60% as center.
+            Defaults to 0.2.
+
+    Returns:
+        tuple ([float, float]): A tuple containing:
+            - avg_center (float): Average velocity magnitude in the center region.
+            - avg_edges (float): Average velocity magnitude in the combined edge regions
+            (left and right).
+
+    Notes:
+        - Adds a 'region' column to the input DataFrame with values 'edge_left',
+        'center', or 'edge_right'
+        - Edge zones are symmetric on both sides of the flow field
+        - Useful for detecting boundary layer effects or flow uniformity issues
+    """
     x_min = df['x_position'].min()
     x_max = df['x_position'].max()
     x_range = x_max - x_min
@@ -50,6 +103,38 @@ def check_velocity_profile(df, edge_zone_percent=.2):
 
 
 def find_spatial_outliers(df, distance_threshold=20, velocity_diff_threshold=0.2):
+    """
+    Identify velocity vectors that deviate significantly from their spatial neighbors.
+
+    Examines each vector and compares its velocity magnitude to the average velocity
+    of nearby vectors. Flags vectors as outliers if they differ from their neighbors
+    by more than a specified threshold, indicating potential measurement errors or
+    turbulent regions.
+
+    Args:
+        df (pandas.DataFrame): DataFrame containing flow data with 'x_position',
+            'y_position', and 'velocity_magnitude' columns.
+        distance_threshold (float, optional): Maximum distance (in position units)
+            to consider other vectors as neighbors. Defaults to 20.
+        velocity_diff_threshold (float, optional): Minimum velocity magnitude difference
+            from the neighborhood average for a vector to be classified as an outlier.
+            Defaults to 0.2.
+
+    Returns:
+        pandas.DataFrame: DataFrame containing outlier information with columns:
+            - index (int): Original index of the outlier vector in the input DataFrame
+            - x (float): X-position of the outlier
+            - y (float): Y-position of the outlier
+            - velocity (float): Velocity magnitude of the outlier
+            - neighbor_avg_velocity (float): Average velocity of nearby neighbors
+            - difference (float): Absolute velocity difference from neighbor average
+
+    Notes:
+        - Uses Euclidean distance to identify neighbors
+        - Excludes the vector itself when calculating neighborhood average
+        - Returns empty DataFrame if no outliers are found
+        - Useful for quality control and identifying spurious velocity measurements
+    """
     outliers = []
 
     for idx, row in df.iterrows():

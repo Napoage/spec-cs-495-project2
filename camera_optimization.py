@@ -6,6 +6,25 @@ import matplotlib.pyplot as plt
 video_path = r"VideoAugmentation/Water Moving_lighten_full_lighten_full.mp4"
 
 def brighten_video(video_path, intensity):
+    """
+    Brighten a video by increasing pixel intensity values across all frames.
+
+    Processes each frame of the video by adding a constant intensity value to all
+    pixels, then saves the result back to the original file path.
+
+    Args:
+        video_path (str): Path to the video file to be brightened. The original
+            file will be replaced with the brightened version.
+        intensity (int): Amount to increase pixel intensity values. Positive values
+            brighten the video. Typical range is 0-100.
+
+    Notes:
+        - Processes all frames in the video sequentially
+        - Uses cv2.convertScaleAbs with beta parameter for brightness adjustment
+        - Modifies the original file in place (creates temporary file during processing)
+        - Preserves original video dimensions, frame rate, and codec (mp4v)
+        - Prints progress messages during processing
+    """
     video = cv2.VideoCapture(video_path)
     if not video.isOpened():
         print("Error: Could not open video.")
@@ -43,6 +62,25 @@ def brighten_video(video_path, intensity):
     print(f"Video brightened.")
 
 def darken_video(video_path, intensity):
+    """
+    Darken a video by decreasing pixel intensity values across all frames.
+
+    Processes each frame of the video by adding a constant intensity value to all
+    pixels, then saves the result back to the original file path.
+
+    Args:
+        video_path (str): Path to the video file to be brightened. The original
+            file will be replaced with the brightened version.
+        intensity (int): Amount to increase pixel intensity values. Positive values
+            brighten the video. Typical range is 0-100.
+
+    Notes:
+        - Processes all frames in the video sequentially
+        - Uses cv2.convertScaleAbs with beta parameter for brightness adjustment
+        - Modifies the original file in place (creates temporary file during processing)
+        - Preserves original video dimensions, frame rate, and codec (mp4v)
+        - Prints progress messages during processing
+    """
     video = cv2.VideoCapture(video_path)
     if not video.isOpened():
         print("Error: Could not open video.")
@@ -80,6 +118,23 @@ def darken_video(video_path, intensity):
     print(f"Video darkened.")
 
 def check_exposure(image):
+    """
+    Check an image for overexposed and underexposed pixels.
+    
+    Analyzes the grayscale intensity distribution to identify the percentage
+    of pixels that are too dark or too bright, which may indicate exposure
+    problems.
+    
+    Args:
+        image (numpy.ndarray): The input image.
+    
+    Returns:
+        tuple[float, float, float, float]: A tuple containing:
+            - dark_pixels (float): Percentage of pixels with intensity 0-50.
+            - bright_pixels (float): Percentage of pixels with intensity 200-255.
+            - clipped_black (float): Percentage of pixels with intensity ≤ 5 (near pure black).
+            - clipped_white (float): Percentage of pixels with intensity ≥ 250 (near pure white).
+    """
     #convert image to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     #create histogram for grayscale image. hist[i] = # of pixels with intensity i
@@ -99,27 +154,29 @@ def check_exposure(image):
 
     return dark_pixels, bright_pixels, clipped_black, clipped_white
 
-def optimize_settings(frame_count, overall_dark_count, overall_bright_count, clipped_black_count, clipped_white_count, FRAME_SKIP):
-
-    # sharp_frames_percentage = sharp_frames * FRAME_SKIP / frame_count
-    overall_dark_percentage = overall_dark_count * FRAME_SKIP / frame_count
-    overall_bright_percentage = overall_bright_count * FRAME_SKIP / frame_count
-    clipped_black_percentage = clipped_black_count * FRAME_SKIP / frame_count
-    clipped_white_percentage = clipped_white_count * FRAME_SKIP / frame_count
-
-    if (overall_dark_percentage > .5) or (clipped_black_percentage > .3):
-        brighten_video(video_path, 50)
-
-    elif(overall_bright_percentage > .5) or (clipped_white_percentage > .3):
-        darken_video(video_path, 50)
-
 def process_video(video_path):
     """
-    Process each frame of a video to check if it's blurry.
+    Iteratively adjust a video's exposure until it meets acceptable quality thresholds.
+
+    Analyzes video frames for exposure issues (too dark, too bright, clipped pixels)
+    and automatically corrects them by brightening or darkening the video. Repeats
+    the process up to 10 times or until the video meets quality standards.
 
     Args:
-        video_path (str): Path to the video file.
-        threshold (float): Variance threshold below which a frame is considered blurry.
+        video_path (str): Path to the video file to be processed. The file will be
+            modified in place if adjustments are needed.
+
+    Notes:
+        - Samples every 10th frame (FRAME_SKIP = 10) for analysis
+        - Maximum of 10 correction iterations to prevent infinite loops
+        - Adjusts brightness by ±50 units per iteration
+        - Video is considered acceptable when:
+            * ≤50% of frames are too dark (>60% dark pixels)
+            * ≤50% of frames are too bright (>40% bright pixels)
+            * ≤30% of frames have clipped blacks (>5% clipped black pixels)
+            * ≤30% of frames have clipped whites (>10% clipped white pixels)
+        - Prints a summary after each iteration showing frame counts and percentages
+        - Modifies the original video file with each adjustment
     """
     iteration = 0
     max_iterations = 10

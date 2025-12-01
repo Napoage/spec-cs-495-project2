@@ -13,8 +13,9 @@ def is_blurry(image, threshold=1000.0):
         threshold (float): Variance threshold below which the image is considered blurry.
 
     Returns:
-        bool: True if the image is blurry, False otherwise.
-        float: The variance of the Laplacian.
+        tuple ([bool, float]): A tuple containing:
+            - bool: True if the image is blurry, False otherwise.
+            - float: The variance of the Laplacian.
     """
     # Convert the image to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -29,6 +30,23 @@ def is_blurry(image, threshold=1000.0):
     return laplacian, variance < threshold, variance
 
 def check_exposure(image):
+    """
+    Check an image for overexposed and underexposed pixels.
+    
+    Analyzes the grayscale intensity distribution to identify the percentage
+    of pixels that are too dark or too bright, which may indicate exposure
+    problems.
+    
+    Args:
+        image (numpy.ndarray): The input image.
+    
+    Returns:
+        tuple[float, float, float, float]: A tuple containing:
+            - dark_pixels (float): Percentage of pixels with intensity 0-50.
+            - bright_pixels (float): Percentage of pixels with intensity 200-255.
+            - clipped_black (float): Percentage of pixels with intensity ≤ 5 (near pure black).
+            - clipped_white (float): Percentage of pixels with intensity ≥ 250 (near pure white).
+    """
     #convert image to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     #create histogram for grayscale image. hist[i] = # of pixels with intensity i
@@ -49,7 +67,32 @@ def check_exposure(image):
     return dark_pixels, bright_pixels, clipped_black, clipped_white
 
 def generate_score(frame_count,  sharp_frames, avg_variance, overall_dark_count, overall_bright_count, clipped_black_count, clipped_white_count, FRAME_SKIP):
-
+    """
+        Generate a quality score for a video based on sharpness and exposure metrics.
+        
+        Calculates a composite score (0-100) based on frame sharpness, variance,
+        and exposure characteristics. Returns 0 if the video fails any critical
+        quality thresholds, otherwise returns a weighted sum of individual quality
+        metrics.
+        
+        Args:
+            frame_count (int): Total number of frames in the video.
+            sharp_frames (int): Number of sampled frames that are sharp.
+            avg_variance (float): Average Laplacian variance across sampled frames.
+            overall_dark_count (int): Number of sampled frames with excessive dark pixels.
+            overall_bright_count (int): Number of sampled frames with excessive bright pixels.
+            clipped_black_count (int): Number of sampled frames with clipped black pixels.
+            clipped_white_count (int): Number of sampled frames with clipped white pixels.
+            FRAME_SKIP (int): Frame sampling interval used during analysis.
+        
+        Returns:
+            float: Quality score from 0 to 100, where 0 indicates critical quality
+                issues and higher values indicate better quality. Returns 0 if:
+                - Less than 30% of frames are sharp
+                - Average variance is less than 2
+                - More than 60% of frames are too dark or too bright
+                - More than 50% of frames have clipped blacks or whites
+        """
     sharp_frames_percentage = sharp_frames * FRAME_SKIP / frame_count
     overall_dark_percentage = overall_dark_count * FRAME_SKIP / frame_count
     overall_bright_percentage = overall_bright_count * FRAME_SKIP / frame_count
@@ -84,11 +127,33 @@ def generate_score(frame_count,  sharp_frames, avg_variance, overall_dark_count,
 
 def process_video(video_path, threshold=1000.0):
     """
-    Process each frame of a video to check if it's blurry.
-
+    Analyze a video's quality by sampling frames for sharpness and exposure issues.
+    
+    Processes every 10th frame of the video to evaluate sharpness (using Laplacian
+    variance) and exposure characteristics (dark, bright, and clipped pixels).
+    Generates a composite quality score and prints a detailed summary of the analysis.
+    
     Args:
-        video_path (str): Path to the video file.
-        threshold (float): Variance threshold below which a frame is considered blurry.
+        video_path (str): Path to the video file to be analyzed.
+        threshold (float, optional): Laplacian variance threshold below which a 
+            frame is considered blurry. Defaults to 1000.0.
+    
+    Returns:
+        float: Overall video quality score from 0 to 100, where higher values
+            indicate better quality. Returns None if the video cannot be opened.
+    
+    Notes:
+        - Analyzes every 10th frame (FRAME_SKIP = 10) for efficiency
+        - Prints a detailed summary including:
+            * Total frame count and sharp/blurry frame percentages
+            * Average Laplacian variance
+            * Frames with exposure issues (too dark, too bright, clipped)
+            * Overall quality score
+        - A frame is considered to have exposure issues if:
+            * >60% of pixels are dark (intensity 0-50)
+            * >40% of pixels are bright (intensity 200-255)
+            * >5% of pixels are clipped black (intensity ≤5)
+            * >10% of pixels are clipped white (intensity ≥250)
     """
     # Open the video file
     cap = cv2.VideoCapture(video_path)
