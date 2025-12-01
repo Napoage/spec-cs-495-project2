@@ -2870,6 +2870,7 @@ import queue
 event_queue = queue.Queue()
 #from blur_detect import process_video
 from ml_utils.QualityDetection import passVideoForTesting
+import camera_optimization
 def confidence_loop():
     """
     Loop that periodically checks video confidence and starts PIV if threshold exceeded.
@@ -2911,6 +2912,7 @@ def confidence_loop():
                     event_queue.put({"event": "PIV Timeout"})
                     time.sleep(5)
                     run_sanity_check('../piv_results.csv')
+            camera_optimization.process_video(video_path)
             time.sleep(120)
 
 def run_sanity_check(results_path):
