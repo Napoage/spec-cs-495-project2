@@ -1458,6 +1458,36 @@ def data_visualization():
     """
     return render_template('data_visualization.html')
 
+@app.route('/get_latest_status')
+@login_required
+def get_latest_status():
+    log_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'app/sanity_flags.log')
+
+    if not os.path.exists(log_path):
+        return jsonify({"status": "Log file not found"}), 404
+
+    try:
+        with open(log_path, 'r') as f:
+            lines = f.readlines()
+
+        if not lines:
+            return jsonify({"status": "No log entries found"})
+
+        last_line = lines[-1].strip()
+
+        # Example: "2025-11-30 12:52:51.375470 - rejected"
+        parts = last_line.split(" - ")
+
+        timestamp = parts[0]
+        result = parts[1]
+
+        return jsonify({
+            "timestamp": timestamp,
+            "result": result
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/data_visualization/get_data')
 @login_required
@@ -2754,7 +2784,8 @@ def confidence_model():
 
 def start_piv_process():
     """Start run_PIV.sh (if needed) and tell it to run once. No waiting here."""
-    event_queue.put("PIV Started")
+    #event_queue.put("PIV Started")
+    #time.sleep(5)
     with open(MAIN_CONFIG, 'r') as cf:
         config = json.load(cf)
     config["last Calibrated"] = datetime.now().strftime("%m-%d-%y")
@@ -2794,7 +2825,7 @@ def wait_for_piv_completion(timeout=1200, quiet_secs=3):
     print(f"Waiting for PIV completion in {run_dir} (timeout: {timeout}s)...")
 
     last_sizes = {}  # path -> (mtime, size) to check stability
-
+    count = 0
     while time.time() - start < timeout:
         try:
             found_stable_new_csv = False
@@ -2823,7 +2854,9 @@ def wait_for_piv_completion(timeout=1200, quiet_secs=3):
 
             if found_stable_new_csv:
                 return True
-
+    
+            print("Still Here" + str(count))
+            count += 1
         except Exception as e:
             print(f"wait_for_piv_completion error: {e}")
 
@@ -2832,7 +2865,7 @@ def wait_for_piv_completion(timeout=1200, quiet_secs=3):
     print("PIV completion timeout reached")
     return False
 
-
+import sanity_check
 import queue
 event_queue = queue.Queue()
 #from blur_detect import process_video
@@ -2845,30 +2878,87 @@ def confidence_loop():
     2. If score exceeds CONFIDENCE_THRESHOLD, initiates PIV process.
     """
     global running
+
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     video_path = os.path.join(BASE_DIR, "../VideoAugmentation", "ACS.MP4")
     video_path = os.path.abspath(video_path)
-    event_queue.put("auto_piv_started")
-    while running:
-        score = passVideoForTesting(video_path, 10, 0.5)
-        if score == None:
-            print("Video Not Loaded")
-            break
-        print(f"Confidence = {score}")
-        if score >= 0.4:
-            event_queue.put("threshold_crossed")
-            start_piv_process()
+    if not os.path.exists(video_path):
+        print("Video file not found")
+        #TODO add to frontend
+        event_queue.put({"event":"video_not_found"})
+    else:
+        event_queue.put({"event":"auto_piv_started"})
+        time.sleep(10)
+        while running:
+            score = passVideoForTesting(video_path, 10, 0.5)
+            print(f"Confidence = {score}")
+            if score >= 0.4:
+                #TODO add threshold data
+                event_queue.put({
+                    "event": "threshold_crossed",
+                    "score": score
+                })
+                time.sleep(10)
+                start_piv_process()
 
-            if wait_for_piv_completion(timeout=1200, quiet_secs=3):
-                print("PIV run completed successfully")
-                event_queue.put("PIV Completed")
-            else:
-                print("PIV completion timeout - may need investigation")
-                event_queue.put("PIV Timeout")
+                if wait_for_piv_completion(timeout=10, quiet_secs=3):
+                    print("PIV run completed successfully")
+                    event_queue.put({"event": "PIV Completed"})
+                    time.sleep(5)
+                    run_sanity_check('../piv_results.csv')
+                else:
+                    print("PIV completion timeout - may need investigation")
+                    event_queue.put({"event": "PIV Timeout"})
+                    time.sleep(5)
+                    run_sanity_check('../piv_results.csv')
+            time.sleep(120)
 
+def run_sanity_check(results_path):
+    """
+        This function will take the piv results and call several functions from sanity_check.py to determine if the
+        results are good or bad. These results will be outputted to the users
 
+        Inputs: 
+            string: path to piv results
+        Outputs: 
+            None
+    """
+    df = pd.read_csv(results_path)
 
-        time.sleep(120)
+    spatial_outliers = sanity_check.find_spatial_outliers(df, distance_threshold=40, velocity_diff_threshold=.1)
+    print("**********Spatial Consistency Check**********")
+    print(f"Number of spatial outliers: {len(spatial_outliers)}")
+    print(f"Percentage of spatial outliers: {len(spatial_outliers)/len(df)*100:.1f}%")
+    print("")
+
+    consistent_flow, directional_outliers = sanity_check.check_flow_direction(df, angle_threshold=25)
+    print("**********Flow Direction Consistency Check**********")
+    print(f"Number of directional outliers: {len(directional_outliers)}")
+    print(f"Percentage of vectors within 25° of median flow direction: {consistent_flow:.2f}%")
+    print("")
+
+    avg_center_velocity, avg_edge_velocity = sanity_check.check_velocity_profile(df, edge_zone_percent=.2)
+    print("**********Velocity Profile Check**********")
+    print(f"Average center velocity: {avg_center_velocity:.3f}")
+    print(f"Average edge velocity: {avg_edge_velocity:.3f}")
+    print(f"Ratio (center/edge): {avg_center_velocity/avg_edge_velocity:.2f}")
+    if avg_center_velocity > avg_edge_velocity:
+        print("Center is faster than edges (GOOD)")
+        status = "Good"
+    else:
+        print("Center is not faster than edges (BAD)")
+        status = "Bad"
+    event_queue.put({
+        "event": "sanity_results",
+        "spatial_outliers": len(spatial_outliers),
+        "spatial_percent": (len(spatial_outliers)/len(df))*100,
+        "directional_outliers": len(directional_outliers),
+        "flow_consistency": consistent_flow,
+        "avg_center_velocity": avg_center_velocity,
+        "avg_edge_velocity": avg_edge_velocity,
+        "status": status
+    })
+    time.sleep(5)
 
 def set_new_run_dir():
     """
@@ -2917,15 +3007,23 @@ def stop_auto_piv():
     """
     global running
     running = False
-    event_queue.put("auto_piv_stopped")
+    event_queue.put({"event": "auto_piv_stopped"})
     return jsonify({"status": "stopped"})
+@app.route("/flag_sanity", methods=["POST"])
+def flag_sanity():
+    data = request.json
+    status = data.get("status", "unknown")
 
+    with open("sanity_flags.log", "a") as f:
+        f.write(f"{datetime.now()} - {status}\n")
+
+    return jsonify({"message": "Flag saved"})
 @app.route('/events')
 def events():
     def event_stream():
         while True:
             event = event_queue.get()  # waits until event exists
-            yield f"data: {event}\n\n"
+            yield f"data: {json.dumps(event)}\n\n"
             if event == "auto_piv_stopped":
                 time.sleep(20)
                 break

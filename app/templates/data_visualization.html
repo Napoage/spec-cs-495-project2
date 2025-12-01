@@ -7,6 +7,22 @@
     <title>PIV Data Visualization</title>
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <style>
+        .status-box {
+            font-size: 1.5rem;
+            font-weight: bold;
+            padding: 12px;
+            border-radius: 8px;
+            width: fit-content;
+        }
+        .approved {
+            background: #d4edda;
+            color: #155724;
+        }
+        .rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
         @font-face {
             font-family: 'Bebas Neue';
             src: url('{{ url_for("static", filename="font/BebasNeue-Regular.ttf") }}') format('truetype');
@@ -149,9 +165,13 @@
     {% if g.process_running %}
         <div class="banner">PIV Process is running</div>
     {% endif %}
+
     <div class="container">
         <h1 class="highlighted-title">PIV Data Visualization</h1>
-
+        <div>
+            <h2>Last Quality Check:</h2>
+            <div id="latestStatus" class="status-box">Loading...</div>
+        </div>
         <div style="margin: 20px 0; text-align: center;">
             <label for="csv-file-select" style="font-size: 18px; margin-right: 10px;">Select CSV File:</label>
             <input type="file" id="csv-file-select" accept=".csv" style="font-size: 16px; padding: 5px;">
@@ -609,6 +629,36 @@
 
             return {slope, intercept};
         }
+        fetch('/get_latest_status')
+    .then(res => res.json())
+    .then(data => {
+        const box = document.getElementById("latestStatus");
+
+        // Handle error or missing log
+        if (data.error || data.status) {
+            box.innerText = data.error || data.status;
+            box.classList.remove("approved", "rejected"); // remove any previous styling
+            return;
+        }
+
+        const result = data.result.toLowerCase();
+        box.innerText = `${result.toUpperCase()} — ${data.timestamp}`;
+
+        // Update styling based on result
+        box.classList.remove("approved", "rejected"); // clear previous
+        if (result === "approved") {
+            box.classList.add("approved");
+        } else if (result === "rejected") {
+            box.classList.add("rejected");
+        }
+    })
+    .catch(err => {
+        const box = document.getElementById("latestStatus");
+        box.innerText = "Error reading log";
+        box.classList.remove("approved", "rejected");
+        console.error(err);
+    });
+
     </script>
 </body>
 </html>

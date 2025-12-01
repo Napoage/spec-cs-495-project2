@@ -81,7 +81,7 @@ def find_spatial_outliers(df, distance_threshold=20, velocity_diff_threshold=0.2
     return pd.DataFrame(outliers)
 
 #import csv
-df = pd.read_csv('piv_results.csv')
+"""df = pd.read_csv('piv_results.csv')
 
 spatial_outliers = find_spatial_outliers(df, distance_threshold=40, velocity_diff_threshold=.1)
 print("**********Spatial Consistency Check**********")
@@ -103,6 +103,6 @@ print(f"Ratio (center/edge): {avg_center_velocity/avg_edge_velocity:.2f}")
 if avg_center_velocity > avg_edge_velocity:
     print("Center is faster than edges (GOOD)")
 else:
-    print("Center is not faster than edges (BAD)")
+    print("Center is not faster than edges (BAD)")"""
 
 
