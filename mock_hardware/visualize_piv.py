@@ -3,6 +3,10 @@ import matplotlib.pyplot as plt
 import cv2
 import os
 import sys
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PARENT_DIR = os.path.dirname(SCRIPT_DIR)
+VIS_DIR = os.path.join(PARENT_DIR, "visualizations")
+os.makedirs(VIS_DIR, exist_ok=True)
 sys.path.append("PIV")
 from ensemble_PIV import ensemble_piv
 
@@ -182,8 +186,8 @@ def create_piv_visualization(background_img, x_piv, y_piv, u_piv, v_piv,
     plt.title('Velocity Magnitude')
 
     plt.tight_layout()
-    plt.savefig('piv_results.png', dpi=150, bbox_inches='tight')
-    plt.savefig('piv_results.pdf', bbox_inches='tight')
+    plt.savefig(os.path.join(VIS_DIR, 'final_piv_results.png'), dpi=150, bbox_inches='tight')
+    plt.savefig(os.path.join(VIS_DIR, 'final_piv_results.pdf'), bbox_inches='tight')
 
     print(f"Visualization saved as 'piv_results.png' and 'piv_results.pdf'")
 

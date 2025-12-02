@@ -3,6 +3,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 import os
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PARENT_DIR = os.path.dirname(SCRIPT_DIR)
+VIS_DIR = os.path.join(PARENT_DIR, "visualizations")
+os.makedirs(VIS_DIR, exist_ok=True)
 
 def visualize_piv_csv():
     """Visualize PIV results from CSV file"""
@@ -165,9 +169,8 @@ def visualize_piv_csv():
     plt.tight_layout()
 
     # Save visualization
-    plt.savefig('piv_visualization.png', dpi=150, bbox_inches='tight')
-    plt.savefig('piv_visualization.pdf', bbox_inches='tight')
-
+    plt.savefig(os.path.join(VIS_DIR, 'piv_visualization.png'), dpi=150, bbox_inches='tight')
+    plt.savefig(os.path.join(VIS_DIR, 'piv_visualization.pdf'), bbox_inches='tight')
     print(f"\n📊 Visualization saved as:")
     print(f"• piv_visualization.png")
     print(f"• piv_visualization.pdf")
