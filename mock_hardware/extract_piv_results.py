@@ -4,6 +4,10 @@ import pandas as pd
 import cv2
 import os
 import sys
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PARENT_DIR = os.path.dirname(SCRIPT_DIR)
+VIS_DIR = os.path.join(PARENT_DIR, "visualizations")
+os.makedirs(VIS_DIR, exist_ok=True)
 
 # Add PIV directory to path
 sys.path.append("PIV")
@@ -276,8 +280,8 @@ Speed:
              fontsize=10, verticalalignment='top', fontfamily='monospace')
 
     plt.tight_layout()
-    plt.savefig('final_piv_results.png', dpi=150, bbox_inches='tight')
-    plt.savefig('final_piv_results.pdf', bbox_inches='tight')
+    plt.savefig(os.path.join(VIS_DIR, 'final_piv_results.png'), dpi=150, bbox_inches='tight')
+    plt.savefig(os.path.join(VIS_DIR, 'final_piv_results.pdf'), bbox_inches='tight')
 
     print("Final PIV visualization saved as 'final_piv_results.png'")
     plt.show()
