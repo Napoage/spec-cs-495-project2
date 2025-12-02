@@ -22,7 +22,7 @@ IMU_script="sudo python3 ${PARENT_DIR}/IMU/run_imu.py --unique-tag=IMUProcess"
 LOG_FILE="${PARENT_DIR}/script.log"
 
 # load gstreamer run_gst_launch() function
-source ${PARENT_DIR}/common_functions.sh
+source ${PARENT_DIR}/mock_hardware/common_functions.sh
 
 #used to log messages to webpage
 log_message() {

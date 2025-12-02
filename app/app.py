@@ -20,7 +20,7 @@ try:
     import smbus
 except ImportError:
     sys.path.append('..')
-    from mock_hardware import MockMPU9250, MockSMBus
+    from mock_hardware.mock_hardware import MockMPU9250, MockSMBus
     # Create a mock module that has the expected structure
     MPU9250 = type('MockModule', (), {'MPU9250': MockMPU9250})()
     smbus = type('MockModule', (), {'SMBus': MockSMBus})()
@@ -2865,12 +2865,12 @@ def wait_for_piv_completion(timeout=1200, quiet_secs=3):
     print("PIV completion timeout reached")
     return False
 
-import sanity_check
+from mock_hardware import sanity_check
 import queue
 event_queue = queue.Queue()
 #from blur_detect import process_video
 from ml_utils.QualityDetection import passVideoForTesting
-import camera_optimization
+from mock_hardware import camera_optimization
 def confidence_loop():
     """
     Loop that periodically checks video confidence and starts PIV if threshold exceeded.

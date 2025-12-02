@@ -1,7 +1,7 @@
 #!/bin/bash
 # set -xe
 
-source common_functions.sh
+source mock_hardware/common_functions.sh
 
 # Step 1: Install Required Packages
 echo "Installing required packages..."
