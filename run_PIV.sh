@@ -23,7 +23,7 @@ IMU_script="sudo python3 ${PARENT_DIR}/IMU/run_imu.py --unique-tag=IMUProcess"
 # Path to your config.json file
 CONFIG_FILE="${PARENT_DIR}/config.json"
 LOG_FILE="${PARENT_DIR}/script.log"
-VIDEO_PATH="${PARENT_DIR}/Water_Moving.mp4"
+VIDEO_PATH="${PARENT_DIR}/mock_hardware/Water_Moving.mp4"
 # --- logging & safety (add these) ---
 touch "$LOG_FILE"                          # clear log each fresh start
 exec > >(tee -a "$LOG_FILE") 2>&1          # send stdout/stderr to script.log
@@ -34,7 +34,7 @@ echo "$(date -Is) PIV SCRIPT STARTED"
 mkdir -p "${PARENT_DIR}/raw_frames"
 
 # load gstreamer run_gst_launch() function
-source $PARENT_DIR/common_functions.sh
+source $PARENT_DIR/mock_hardware/common_functions.sh
 
 trap cleanup EXIT INT TERM
 
@@ -119,7 +119,7 @@ export MPLBACKEND=Agg
 # Process images
 python3 ${PARENT_DIR}/PIV/preprocess_frames.py
 python3 ${PARENT_DIR}/PIV/call_PIV_lab.py
-python3 ${PARENT_DIR}/visualize_csv_data.py || echo "visualize_csv_data failed"
+python3 ${PARENT_DIR}/mock_hardware/visualize_csv_data.py || echo "visualize_csv_data failed"
 rm -f ${PARENT_DIR}/images/*
 rm -f ${PARENT_DIR}/raw_frames/*
 
