@@ -2891,9 +2891,9 @@ def confidence_loop():
         event_queue.put({"event":"auto_piv_started"})
         time.sleep(10)
         while running:
-            score = passVideoForTesting(video_path, 10, 0.5)
+            score, raindrop = passVideoForTesting(video_path, 10, 0.5)
             print(f"Confidence = {score}")
-            if score >= 0.4:
+            if score >= 0.4 and not raindrop:
                 #TODO add threshold data
                 event_queue.put({
                     "event": "threshold_crossed",

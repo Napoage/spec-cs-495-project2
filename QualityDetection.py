@@ -193,18 +193,22 @@ def results(passed, failed, raindrops, stats, REJECT_THRESHOLD):
         print("No frames processed!")
         return
 
+    drop_detected = False
     # average frame score
     avg_score = sum(stats["frame_scores"]) / len(stats["frame_scores"])
 
+    # raindrops just set to arbitrarily low value (5)
     if ((failed + raindrops) / total) >= REJECT_THRESHOLD or raindrops >= 5:
         print(f"Video is rejected due to lens obstruction or degraded video quality - Quality Insufficient ({((failed + raindrops) / total) * 100:.2f}%)")
+        if raindrops >= 5:
+            drop_detected = True
     else:
         print(f"Video Passed - Quality Sufficient ({(passed / total) * 100:.2f}%)")
 
     print(stats["frame_scores"])
     print(f"\nAverage Frame Quality Score: {avg_score:.3f}")
     
-    return avg_score
+    return avg_score, drop_detected
 
 
 def main():
@@ -212,8 +216,9 @@ def main():
     frame_id = "ACS"
     frame_skip = 10
     reject_threshold = 0.5
+    drop = False
 
-    final_score = syntheticRaindropAnalysis(frame_id, REJECT_THRESHOLD=reject_threshold)
+    final_score, drop = syntheticRaindropAnalysis(frame_id, REJECT_THRESHOLD=reject_threshold)
     #final_score = passVideoForTesting(video_path, FRAME_SKIP=frame_skip, REJECT_THRESHOLD=reject_threshold)
 
 if __name__ == "__main__":
